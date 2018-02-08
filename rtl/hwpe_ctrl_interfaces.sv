@@ -55,7 +55,7 @@ interface hwpe_ctrl_intf_periph (
     #(TA);
     add = w_add;
     data = w_data;
-    wen = 1'b1;
+    wen = 1'b0;
     req = 1'b1;
     be = w_be;
     id = '0;
@@ -75,7 +75,7 @@ interface hwpe_ctrl_intf_periph (
     #(TA);
     add = r_add;
     req = 1'b1;
-    wen = 1'b0;
+    wen = 1'b1;
     id = '0;
     while (gnt != 1'b1)
       #(TCP);

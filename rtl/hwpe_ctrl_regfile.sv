@@ -74,6 +74,26 @@ module hwpe_ctrl_regfile
   logic r_was_testset;
   logic r_was_mandatory;
 
+  logic [2:0] r_first_startup;
+  logic clear_first_startup;
+  logic r_clear_first_startup;
+
+  // First startup: generate a two-cycle strobe to clear the content of SCMs
+  always_ff @(posedge clk_i or negedge rst_ni)
+  begin
+    if(~rst_ni) begin
+      r_first_startup <= '0;
+      r_clear_first_startup <= '0;
+    end
+    else begin
+      r_first_startup[0] <= 1'b1;
+      r_first_startup[1] <= r_first_startup[0];
+      r_first_startup[2] <= r_first_startup[1];
+      r_clear_first_startup <= clear_first_startup;
+    end
+  end
+  assign clear_first_startup = |(r_first_startup[1:0]) & ~ r_first_startup[2];
+
   // / Register file memory write (synchronous)
   genvar i,j,k;
   generate
@@ -106,18 +126,18 @@ module hwpe_ctrl_regfile
       .ADDR_WIDTH(SCM_ADDR_WIDTH),
       .DATA_WIDTH(32)
     ) i_regfile_latch (
-      .clk        ( clk_i                 ),
-      .rst_n      ( rst_ni                ),
-      .clear      ( clear_i               ),
-      .ReadEnable ( regfile_latch_re      ),
-      .ReadAddr   ( regfile_latch_rd_addr ),
-      .ReadData   ( regfile_latch_rdata   ),
+      .clk        ( clk_i                           ),
+      .rst_n      ( rst_ni                          ),
+      .clear      ( clear_i | r_clear_first_startup ),
+      .ReadEnable ( regfile_latch_re                ),
+      .ReadAddr   ( regfile_latch_rd_addr           ),
+      .ReadData   ( regfile_latch_rdata             ),
 
-      .WriteAddr  ( regfile_latch_wr_addr ),
-      .WriteEnable( regfile_latch_we      ),
-      .WriteData  ( regfile_latch_wdata   ),
-      .WriteBE    ( regfile_latch_be      ),
-      .MemContent ( regfile_latch_mem     )
+      .WriteAddr  ( regfile_latch_wr_addr           ),
+      .WriteEnable( regfile_latch_we                ),
+      .WriteData  ( regfile_latch_wdata             ),
+      .WriteBE    ( regfile_latch_be                ),
+      .MemContent ( regfile_latch_mem               )
     );
 
     for(i=0; i<N_CONTEXT; i++)
