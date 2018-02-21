@@ -13,5 +13,13 @@ hwpe-ctrl:
     rtl/hwpe_ctrl_slave.sv,
     rtl/hwpe_ctrl_seq_mult.sv,
     rtl/hwpe_ctrl_ucode.sv,
+  ]
+
+tb_hwpe_ctrl:
+  targets: [
+    rtl
+  ]
+  files: [
     tb/tb_hwpe_ctrl_seq_mult.sv,
   ]
+
