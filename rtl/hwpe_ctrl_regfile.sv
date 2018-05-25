@@ -99,29 +99,6 @@ module hwpe_ctrl_regfile
   generate
     logic [N_CONTEXT-1:0]                  wren_cxt;
 
-    logic[2**LOG_CONTEXT-1:0] ptr_cxt_decoded;
-    logic[N_REGISTERS-1:0]    data_add_decoded;
-
-    always_comb
-    begin : ptr_cxt_decoder
-      for(int i=0; i<2**LOG_CONTEXT; i++) begin
-         if(regfile_in_i.addr[LOG_REGS_MC-1:LOG_REGS] == i[LOG_CONTEXT-1:0])
-            ptr_cxt_decoded[i] = 1'b1;
-         else
-            ptr_cxt_decoded[i] = 1'b0;
-      end
-    end
-
-    always_comb
-    begin : data_add_decoder
-      for(int i=0; i<2**LOG_REGS; i++) begin
-         if(regfile_in_i.addr[LOG_REGS-1:0])
-            data_add_decoded[i] = 1'b1;
-         else
-            data_add_decoded[i] = 1'b0;
-      end
-    end
-
     hwpe_ctrl_regfile_latch #(
       .ADDR_WIDTH(SCM_ADDR_WIDTH),
       .DATA_WIDTH(32)
@@ -300,7 +277,7 @@ module hwpe_ctrl_regfile
   begin : data_src_encoder
     data_src_encoded = {$clog2(ID_WIDTH){1'b0}};
     for(int i=0; i<ID_WIDTH; i++) begin
-      if(regfile_in_i.src[ID_WIDTH-1:0] == i[ID_WIDTH-1:0])
+      if(regfile_in_i.src[ID_WIDTH-1:0] == (i & {$clog2(ID_WIDTH){1'b1}}))
         data_src_encoded = 1 << i;
     end
   end
