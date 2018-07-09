@@ -99,7 +99,7 @@ module hwpe_ctrl_regfile
   generate
     logic [N_CONTEXT-1:0]                  wren_cxt;
 
-    hwpe_ctrl_regfile_latch #(
+    hwpe_ctrl_regfile_latch_test_wrap #(
       .ADDR_WIDTH(SCM_ADDR_WIDTH),
       .DATA_WIDTH(32)
     ) i_regfile_latch (
@@ -114,7 +114,15 @@ module hwpe_ctrl_regfile
       .WriteEnable( regfile_latch_we                ),
       .WriteData  ( regfile_latch_wdata             ),
       .WriteBE    ( regfile_latch_be                ),
-      .MemContent ( regfile_latch_mem               )
+      .MemContent ( regfile_latch_mem               ),
+
+      .BIST       ( 1'b0                            ),
+      .CSN_T      (                                 ),
+      .WEN_T      (                                 ),
+      .A_T        (                                 ),
+      .D_T        (                                 ),
+      .BE_T       (                                 ),
+      .Q_T        (                                 )
     );
 
     for(i=0; i<N_CONTEXT; i++)
@@ -139,7 +147,10 @@ module hwpe_ctrl_regfile
         regfile_mem_mandatory_dout <= '0;
       end
       else begin
-        regfile_mem_mandatory_dout <= regfile_mem_mandatory[regfile_in_i.addr[LOG_REGS-1:0]];
+        if(regfile_in_i.addr[LOG_REGS-1:0] > 1)
+          regfile_mem_mandatory_dout <= regfile_mem_mandatory[regfile_in_i.addr[LOG_REGS-1:0]];
+        else
+          regfile_mem_mandatory_dout <= 32'hdeadbeef;
       end
     end
     assign regfile_mem_dout = (~r_was_mandatory) ? regfile_latch_rdata : regfile_mem_mandatory_dout;
