@@ -15,7 +15,7 @@
 
 package hwpe_ctrl_package;
 
-  parameter int unsigned REGFILE_N_CORES            = 8;
+  parameter int unsigned REGFILE_N_CORES            = 9;
   parameter int unsigned REGFILE_N_CONTEXT          = 2;
   parameter int unsigned REGFILE_N_EVT              = 2;
   parameter int unsigned REGFILE_N_REGISTERS        = 64;
