@@ -15,7 +15,7 @@
 
 package hwpe_ctrl_package;
 
-  parameter int unsigned REGFILE_N_CORES            = 8;
+  parameter int unsigned REGFILE_MAX_N_CORES        = 16;
   parameter int unsigned REGFILE_N_CONTEXT          = 2;
   parameter int unsigned REGFILE_N_EVT              = 2;
   parameter int unsigned REGFILE_N_REGISTERS        = 64;
@@ -69,11 +69,11 @@ package hwpe_ctrl_package;
   } ctrl_slave_t;
 
   typedef struct packed {
-    logic                                          start;
-    logic [REGFILE_N_CORES-1:0][REGFILE_N_EVT-1:0] evt;
-    logic                                          done;
-    logic                                          is_working;
-    logic                                          enable;
+    logic                                              start;
+    logic [REGFILE_MAX_N_CORES-1:0][REGFILE_N_EVT-1:0] evt;
+    logic                                              done;
+    logic                                              is_working;
+    logic                                              enable;
   } flags_slave_t;
 
   typedef struct packed {
