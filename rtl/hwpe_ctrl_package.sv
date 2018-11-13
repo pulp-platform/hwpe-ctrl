@@ -19,7 +19,7 @@ package hwpe_ctrl_package;
   parameter int unsigned REGFILE_N_CONTEXT          = 2;
   parameter int unsigned REGFILE_N_EVT              = 2;
   parameter int unsigned REGFILE_N_REGISTERS        = 64;
-  parameter int unsigned REGFILE_N_MANDATORY_REGS   = 7;
+  parameter int unsigned REGFILE_N_MANDATORY_REGS   = 8;
   parameter int unsigned REGFILE_N_MAX_IO_REGS      = 48;
   parameter int unsigned REGFILE_N_MAX_GENERIC_REGS = 8;
   parameter int unsigned REGFILE_N_RESERVED_REGS    = REGFILE_N_REGISTERS-REGFILE_N_MANDATORY_REGS-REGFILE_N_MAX_GENERIC_REGS-REGFILE_N_MAX_IO_REGS;
@@ -74,6 +74,7 @@ package hwpe_ctrl_package;
     logic                                              done;
     logic                                              is_working;
     logic                                              enable;
+    logic [7:0]                                        sw_evt;
   } flags_slave_t;
 
   typedef struct packed {

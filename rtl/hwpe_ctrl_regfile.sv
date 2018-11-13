@@ -267,19 +267,16 @@ module hwpe_ctrl_regfile
   begin : write_mandatory_proc_word
     if (rst_ni == 0) begin
       regfile_mem_mandatory[4] <= 0;
-      regfile_mem_mandatory[5] <= 0;
     end
     else if (clear_i == 1'b1) begin
       regfile_mem_mandatory[4] <= 0;
-      regfile_mem_mandatory[5] <= 0;
     end
     else begin
       regfile_mem_mandatory[4] <= { 24'b0 , running_job_id };
-      if(regfile_in_i.wren==1'b1 || regfile_in_i.rden==1'b1)
-        regfile_mem_mandatory[5] <= regfile_in_i.addr[LOG_REGS_MC-1:LOG_REGS];
     end
   end
 
+  assign regfile_mem_mandatory[5] = '0;
   assign regfile_mem_mandatory[2] = r_finished_cnt;
 
   logic [$clog2(ID_WIDTH)-1:0] data_src_encoded;

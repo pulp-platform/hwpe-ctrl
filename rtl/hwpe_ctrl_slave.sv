@@ -22,6 +22,7 @@ module hwpe_ctrl_slave
   parameter int unsigned N_EVT          = REGFILE_N_EVT,
   parameter int unsigned N_IO_REGS      = 2,
   parameter int unsigned N_GENERIC_REGS = 0,
+  parameter int unsigned N_SW_EVT       = 8,
   parameter int unsigned ID_WIDTH       = 16
 )
 (
@@ -34,6 +35,7 @@ module hwpe_ctrl_slave
 
   input  ctrl_slave_t         ctrl_i,
   output flags_slave_t        flags_o,
+  output logic [N_SW_EVT-1:0] sw_evt_o,
   output ctrl_regfile_t       reg_file
 );
 
@@ -324,6 +326,22 @@ module hwpe_ctrl_slave
         flags_o.evt[i][N_EVT-1:1] <= (offloading_core[running_context] == i) ? ctrl_i.evt              : '0;
       for(int i=0; i<N_CORES; i++)
         flags_o.evt[i][0] <= (offloading_core[running_context] == i)         ? regfile_flags.true_done : 1'b0;
+    end
+  end
+
+  always_ff @(posedge clk_i or negedge rst_ni)
+  begin : sw_evt_proc
+    if(rst_ni == 1'b0) begin
+      flags_o.sw_evt <= '0;
+    end
+    else if(clear_o == 1'b1) begin
+      flags_o.sw_evt <= '0;
+    end
+    else if((cfg.req == 1'b1) && (cfg.wen == 1'b0) && (cfg.add[LOG_REGS+2-1:2]) == 7) begin
+      flags_o.sw_evt[cfg.data[3:0]] <= 1'b1;
+    end
+    else begin
+      flags_o.sw_evt <= '0;
     end
   end
 
