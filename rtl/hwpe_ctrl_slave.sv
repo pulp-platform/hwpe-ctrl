@@ -225,8 +225,8 @@ module hwpe_ctrl_slave
   endgenerate
 
   // Extension write enable
-  assign flags_o.ext_we      = (flags_i.is_mandatory == 1'b1) && (regfile_in_i.addr[LOG_REGS-1:0] == REGFILE_EXT_DATA_IDX);
-  assign regfile_in_i.ext_we = flags_o.ext_we;
+  assign flags_o.ext_we       = (regfile_flags.is_mandatory == 1'b1) && (regfile_in.addr[LOG_REGS-1:0] == REGFILE_EXT_DATA_IDX);
+  assign regfile_flags.ext_we = flags_o.ext_we;
 
   // FSM to set the running state
   always_ff @(posedge clk_i or negedge rst_ni)

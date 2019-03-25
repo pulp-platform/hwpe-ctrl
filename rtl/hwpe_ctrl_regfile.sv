@@ -284,14 +284,14 @@ module hwpe_ctrl_regfile
 
   // Extension: registered on demand
   generate
-    if (REG_EXTENSION) begin : gen_assign_ext
-        assign regfile_mem_mandatory[EXTENSION_IDX] = regfile_in_i;
+    if (EXT_REGGED) begin : gen_assign_ext
+        assign regfile_mem_mandatory[EXT_DATA_IDX] = regfile_in_i;
     end else begin
         always_ff @(posedge clk_i or negedge rst_ni) begin
           if(~rst_ni) begin
-            regfile_mem_mandatory[EXTENSION_IDX] <= 0;
+            regfile_mem_mandatory[EXT_DATA_IDX] <= 0;
           end else if (flags_i.ext_we) begin
-            regfile_mem_mandatory[EXTENSION_IDX] <= regfile_in_i;
+            regfile_mem_mandatory[EXT_DATA_IDX] <= regfile_in_i;
           end
         end
     end
