@@ -20,7 +20,8 @@ module hwpe_ctrl_regfile
   parameter int unsigned N_CONTEXT      = REGFILE_N_CONTEXT,
   parameter int unsigned ID_WIDTH       = 16,
   parameter int unsigned N_IO_REGS      = 2,
-  parameter int unsigned N_GENERIC_REGS = 0
+  parameter int unsigned N_GENERIC_REGS = 0,
+  parameter int unsigned EXT_REGGED     = REGFILE_EXT_REGGED
 )
 (
   input  logic           clk_i,
@@ -43,6 +44,8 @@ module hwpe_ctrl_regfile
   localparam int unsigned N_MAX_GENERIC_REGS  = REGFILE_N_MAX_GENERIC_REGS;
   localparam int unsigned LOG_REGS            = $clog2(N_REGISTERS);
   localparam int unsigned LOG_REGS_MC         = LOG_REGS+LOG_CONTEXT;
+  // Extension
+  localparam int unsigned EXT_DATA_IDX    = REGFILE_EXT_DATA_IDX;
 
   localparam int unsigned SCM_ADDR_WIDTH  = $clog2(N_CONTEXT*N_IO_REGS + N_GENERIC_REGS + N_MANDATORY_REGS - 2);
   localparam int unsigned N_SCM_REGISTERS = 2**SCM_ADDR_WIDTH;
@@ -278,6 +281,21 @@ module hwpe_ctrl_regfile
 
   assign regfile_mem_mandatory[5] = '0;
   assign regfile_mem_mandatory[2] = r_finished_cnt;
+
+  // Extension: registered on demand
+  generate
+    if (REG_EXTENSION) begin : gen_assign_ext
+        assign regfile_mem_mandatory[EXTENSION_IDX] = regfile_in_i;
+    end else begin
+        always_ff @(posedge clk_i or negedge rst_ni) begin
+          if(~rst_ni) begin
+            regfile_mem_mandatory[EXTENSION_IDX] <= 0;
+          end else if (flags_i.ext_we) begin
+            regfile_mem_mandatory[EXTENSION_IDX] <= regfile_in_i;
+          end
+        end
+    end
+  endgenerate
 
   logic [$clog2(ID_WIDTH)-1:0] data_src_encoded;
 

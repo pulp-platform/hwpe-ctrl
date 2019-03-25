@@ -23,6 +23,10 @@ package hwpe_ctrl_package;
   parameter int unsigned REGFILE_N_MAX_IO_REGS      = 48;
   parameter int unsigned REGFILE_N_MAX_GENERIC_REGS = 8;
   parameter int unsigned REGFILE_N_RESERVED_REGS    = REGFILE_N_REGISTERS-REGFILE_N_MANDATORY_REGS-REGFILE_N_MAX_GENERIC_REGS-REGFILE_N_MAX_IO_REGS;
+  // Extension register
+  localparam int unsigned REGFILE_EXT_REGGED        = 0;
+  localparam int unsigned REGFILE_EXT_DATA_IDX      = 8;
+
 
   parameter int unsigned UCODE_NB_LOOPS  = 6;
   parameter int unsigned UCODE_LENGTH    = 16;
@@ -61,6 +65,7 @@ package hwpe_ctrl_package;
     logic                                 is_working;
     logic [$clog2(REGFILE_N_CONTEXT)-1:0] pointer_context;
     logic [$clog2(REGFILE_N_CONTEXT)-1:0] running_context;
+    logic                                 ext_we; // Extension
   } flags_regfile_t;
 
   typedef struct packed {
@@ -75,6 +80,7 @@ package hwpe_ctrl_package;
     logic                                              is_working;
     logic                                              enable;
     logic [7:0]                                        sw_evt;
+    logic                                              ext_we; // Extension
   } flags_slave_t;
 
   typedef struct packed {
