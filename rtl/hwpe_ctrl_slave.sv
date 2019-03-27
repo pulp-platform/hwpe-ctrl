@@ -224,9 +224,11 @@ module hwpe_ctrl_slave
      
   endgenerate
 
-  // Extension write enable
-  assign flags_o.ext_we       = (regfile_flags.is_mandatory == 1'b1) && (regfile_in.addr[LOG_REGS-1:0] == REGFILE_EXT_DATA_IDX);
-  assign regfile_flags.ext_we = flags_o.ext_we;
+  // Extension read and write enable, accessing ID LSB
+  assign regfile_flags.ext_re = (regfile_flags.is_mandatory == 1'b1) && (regfile_in.addr[LOG_REGS-1:0] == REGFILE_EXT_OUT_IDX) & ~cfg.wen;
+  assign regfile_flags.ext_we = (regfile_flags.is_mandatory == 1'b1) && (regfile_in.addr[LOG_REGS-1:0] == REGFILE_EXT_IN_IDX)  & cfg.wen;
+  assign flags_o.ext_we       = regfile_flags.ext_we;
+  assign flags_o.ext_id       = cfg.id[4:0];
 
   // FSM to set the running state
   always_ff @(posedge clk_i or negedge rst_ni)

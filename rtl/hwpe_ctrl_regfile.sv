@@ -21,7 +21,7 @@ module hwpe_ctrl_regfile
   parameter int unsigned ID_WIDTH       = 16,
   parameter int unsigned N_IO_REGS      = 2,
   parameter int unsigned N_GENERIC_REGS = 0,
-  parameter int unsigned EXT_REGGED     = REGFILE_EXT_REGGED
+  parameter int unsigned EXT_IN_REGGED  = REGFILE_EXT_IN_REGGED
 )
 (
   input  logic           clk_i,
@@ -45,7 +45,9 @@ module hwpe_ctrl_regfile
   localparam int unsigned LOG_REGS            = $clog2(N_REGISTERS);
   localparam int unsigned LOG_REGS_MC         = LOG_REGS+LOG_CONTEXT;
   // Extension
-  localparam int unsigned EXT_DATA_IDX    = REGFILE_EXT_DATA_IDX;
+  localparam int unsigned EXT_OUT_IDX         = REGFILE_EXT_OUT_IDX;
+  localparam int unsigned EXT_IN_IDX          = REGFILE_EXT_IN_IDX;
+  parameter int unsigned EXT_OUT_WIDTH        = REGFILE_EXT_OUT_WIDTH;
 
   localparam int unsigned SCM_ADDR_WIDTH  = $clog2(N_CONTEXT*N_IO_REGS + N_GENERIC_REGS + N_MANDATORY_REGS - 2);
   localparam int unsigned N_SCM_REGISTERS = 2**SCM_ADDR_WIDTH;
@@ -254,7 +256,9 @@ module hwpe_ctrl_regfile
       r_was_mandatory <= flags_i.is_mandatory;
     end
   end
-  assign regfile_out_o.rdata = (r_was_testset) ? regfile_out_rdata_int : regfile_mem_dout;
+  // Extension does not preemt testset, but other registers
+  assign regfile_out_o.rdata = (r_was_testset) ? regfile_out_rdata_int : 
+      ((flags_i.ext_re) ? {{(32-EXT_OUT_WIDTH){1'b0}}, regfile_mem_mandatory[EXT_OUT_IDX]} : regfile_mem_dout);
 
   generate
 
@@ -282,20 +286,23 @@ module hwpe_ctrl_regfile
   assign regfile_mem_mandatory[5] = '0;
   assign regfile_mem_mandatory[2] = r_finished_cnt;
 
-  // Extension: registered on demand
+  // Extension in port: read
   generate
-    if (EXT_REGGED) begin : gen_assign_ext
-        assign regfile_mem_mandatory[EXT_DATA_IDX] = regfile_in_i;
-    end else begin
+    if (EXT_IN_REGGED) begin : gen_assign_ext
+        assign regfile_mem_mandatory[EXT_IN_IDX] = regfile_in_i;
+    end else begin : gen_assign_ext
         always_ff @(posedge clk_i or negedge rst_ni) begin
           if(~rst_ni) begin
-            regfile_mem_mandatory[EXT_DATA_IDX] <= 0;
+            regfile_mem_mandatory[EXT_IN_IDX] <= 0;
           end else if (flags_i.ext_we) begin
-            regfile_mem_mandatory[EXT_DATA_IDX] <= regfile_in_i;
+            regfile_mem_mandatory[EXT_IN_IDX] <= regfile_in_i;
           end
         end
     end
   endgenerate
+  // Assign to regfile
+  assign reg_file.ext_data = regfile_mem_mandatory[EXT_IN_IDX];
+
 
   logic [$clog2(ID_WIDTH)-1:0] data_src_encoded;
 
