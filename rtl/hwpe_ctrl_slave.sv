@@ -23,7 +23,8 @@ module hwpe_ctrl_slave
   parameter int unsigned N_IO_REGS      = 2,
   parameter int unsigned N_GENERIC_REGS = 0,
   parameter int unsigned N_SW_EVT       = 8,
-  parameter int unsigned ID_WIDTH       = 16
+  parameter int unsigned ID_WIDTH       = 16,
+  parameter int unsigned EXT_IN_REGGED  = REGFILE_EXT_IN_REGGED
 )
 (
   input  logic                clk_i,
@@ -227,8 +228,24 @@ module hwpe_ctrl_slave
   // Extension read and write enable, accessing ID LSB
   assign regfile_flags.ext_re = (regfile_flags.is_mandatory == 1'b1) && (regfile_in.addr[LOG_REGS-1:0] == REGFILE_EXT_OUT_IDX) & ~cfg.wen;
   assign regfile_flags.ext_we = (regfile_flags.is_mandatory == 1'b1) && (regfile_in.addr[LOG_REGS-1:0] == REGFILE_EXT_IN_IDX)  & cfg.wen;
-  assign flags_o.ext_we       = regfile_flags.ext_we;
-  assign flags_o.ext_id       = cfg.id[4:0];
+
+  // If inputs registered: also register flags
+  generate
+    if (EXT_IN_REGGED) begin : gen_assign_ext
+      assign flags_o.ext_we       = regfile_flags.ext_we;
+      assign flags_o.ext_id       = cfg.id[4:0];
+    end else begin : gen_assign_ext
+      always_ff @(posedge clk_i or negedge rst_ni) begin : proc_ext_flags
+        if(~rst_ni) begin
+          flags_o.ext_we <= 1'b0;
+          flags_o.ext_id <= 5'b0;
+        end else begin
+          flags_o.ext_we <= regfile_flags.ext_we;
+          flags_o.ext_id <= cfg.id[4:0];
+        end
+      end
+    end
+  endgenerate
 
   // FSM to set the running state
   always_ff @(posedge clk_i or negedge rst_ni)

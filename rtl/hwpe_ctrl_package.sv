@@ -26,8 +26,8 @@ package hwpe_ctrl_package;
  
   // Extension register(s)
   localparam int unsigned REGFILE_EXT_IN_REGGED     = 0;
-  localparam int unsigned REGFILE_EXT_IN_IDX        = 8;
-  localparam int unsigned REGFILE_EXT_OUT_IDX       = 8;
+  localparam int unsigned REGFILE_EXT_IN_IDX        = 7;
+  localparam int unsigned REGFILE_EXT_OUT_IDX       = 7;
   localparam int unsigned REGFILE_EXT_OUT_WIDTH     = 32;
   
 
