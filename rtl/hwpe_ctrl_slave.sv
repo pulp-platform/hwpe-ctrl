@@ -226,8 +226,10 @@ module hwpe_ctrl_slave
   endgenerate
 
   // Extension read and write enable, accessing ID LSB
-  assign regfile_flags.ext_re = (regfile_flags.is_mandatory == 1'b1) && (regfile_in.addr[LOG_REGS-1:0] == REGFILE_EXT_OUT_IDX) & ~cfg.wen;
-  assign regfile_flags.ext_we = (regfile_flags.is_mandatory == 1'b1) && (regfile_in.addr[LOG_REGS-1:0] == REGFILE_EXT_IN_IDX)  & cfg.wen;
+  logic ext_access;
+  assign ext_access = (regfile_flags.is_mandatory == 1'b1) && (regfile_in.addr[LOG_REGS-1:0] == REGFILE_EXT_OUT_IDX) & cfg.req;
+  assign regfile_flags.ext_re = ext_access & cfg.wen;
+  assign regfile_flags.ext_we = ext_access & ~cfg.wen;
 
   // If inputs registered: also register flags
   generate

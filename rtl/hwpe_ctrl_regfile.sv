@@ -151,9 +151,15 @@ module hwpe_ctrl_regfile
       else if(clear_i) begin
         regfile_mem_mandatory_dout <= '0;
       end
+      // Extension
+      else if(flags_i.ext_re) begin
+        regfile_mem_mandatory_dout <= {{(32-EXT_OUT_WIDTH){1'b0}}, regfile_mem_mandatory[EXT_OUT_IDX]};
+      end
+      // Other Mandatory registers
       else begin
         if(regfile_in_i.addr[LOG_REGS-1:0] > 1)
           regfile_mem_mandatory_dout <= regfile_mem_mandatory[regfile_in_i.addr[LOG_REGS-1:0]];
+        // Unknown address
         else
           regfile_mem_mandatory_dout <= 32'hdeadbeef;
       end
@@ -257,8 +263,7 @@ module hwpe_ctrl_regfile
     end
   end
   // Extension does not preemt testset, but other registers
-  assign regfile_out_o.rdata = (r_was_testset) ? regfile_out_rdata_int : 
-      ((flags_i.ext_re) ? {{(32-EXT_OUT_WIDTH){1'b0}}, regfile_mem_mandatory[EXT_OUT_IDX]} : regfile_mem_dout);
+  assign regfile_out_o.rdata = (r_was_testset) ? regfile_out_rdata_int : regfile_mem_dout;
 
   generate
 
@@ -285,24 +290,23 @@ module hwpe_ctrl_regfile
 
   assign regfile_mem_mandatory[5] = '0;
   assign regfile_mem_mandatory[2] = r_finished_cnt;
+  // Extension
+  assign regfile_mem_mandatory[EXT_IN_IDX] = regfile_in_i.wdata;
 
-  // Extension in port: read
+  // Assign Extension to external flag for access. Registered on demand
   generate
     if (EXT_IN_REGGED) begin : gen_assign_ext
-        assign regfile_mem_mandatory[EXT_IN_IDX] = regfile_in_i;
+        assign reg_file.ext_data = regfile_mem_mandatory[EXT_IN_IDX];
     end else begin : gen_assign_ext
-        always_ff @(posedge clk_i or negedge rst_ni) begin
-          if(~rst_ni) begin
-            regfile_mem_mandatory[EXT_IN_IDX] <= 0;
-          end else if (flags_i.ext_we) begin
-            regfile_mem_mandatory[EXT_IN_IDX] <= regfile_in_i;
-          end
+      always_ff @(posedge clk_i or negedge rst_ni) begin
+        if(~rst_ni) begin
+          reg_file.ext_data <= 0;
+        end else if (flags_i.ext_we) begin
+          reg_file.ext_data <= regfile_mem_mandatory[EXT_IN_IDX];
         end
+      end
     end
   endgenerate
-  // Assign to regfile
-  assign reg_file.ext_data = regfile_mem_mandatory[EXT_IN_IDX];
-
 
   logic [$clog2(ID_WIDTH)-1:0] data_src_encoded;
 
