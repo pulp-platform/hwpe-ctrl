@@ -227,15 +227,23 @@ module hwpe_ctrl_slave
 
   // Extension read and write enable, accessing ID LSB
   logic ext_access;
+  logic [4:0] ext_id_n;
   assign ext_access = (regfile_flags.is_mandatory == 1'b1) && (regfile_in.addr[LOG_REGS-1:0] == REGFILE_EXT_OUT_IDX) & cfg.req;
   assign regfile_flags.ext_re = ext_access & cfg.wen;
   assign regfile_flags.ext_we = ext_access & ~cfg.wen;
+
+  // ID of ext request: bit-extend or slice
+  generate if (ID_WIDTH >=5) begin
+    assign ext_id_n = cfg.id[4:0];
+  end else begin
+    assign ext_id_n = {{(5-ID_WIDTH){1'b0}}, cfg.id};
+  end endgenerate
 
   // If inputs registered: also register flags
   generate
     if (EXT_IN_REGGED) begin : gen_assign_ext
       assign flags_o.ext_we       = regfile_flags.ext_we;
-      assign flags_o.ext_id       = cfg.id[4:0];
+      assign flags_o.ext_id       = ext_id_n;
     end else begin : gen_assign_ext
       always_ff @(posedge clk_i or negedge rst_ni) begin : proc_ext_flags
         if(~rst_ni) begin
@@ -243,7 +251,7 @@ module hwpe_ctrl_slave
           flags_o.ext_id <= 5'b0;
         end else begin
           flags_o.ext_we <= regfile_flags.ext_we;
-          flags_o.ext_id <= cfg.id[4:0];
+          flags_o.ext_id <= ext_id_n;
         end
       end
     end
