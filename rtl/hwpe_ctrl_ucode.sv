@@ -1,4 +1,4 @@
-/* 
+/*
  * hwpe_ctrl_ucode.sv
  * Francesco Conti <fconti@iis.ee.ethz.ch>
  *
@@ -118,7 +118,7 @@ module hwpe_ctrl_ucode
         else if(flags_o.valid)
           next_accum_state = ACCUM_IDLE;
       end // ACCUM_VALID
-    endcase // curr_accum_state    
+    endcase // curr_accum_state
   end
 
   assign flags_o.accum = (next_accum_state == ACCUM_IDLE)   ? 1'b0 : 1'b1;
@@ -149,7 +149,7 @@ module hwpe_ctrl_ucode
     // if next operation is within the current loop, update address
     if((curr_idx[curr_loop] < ucode_i.range[curr_loop] - 1) && (curr_op < ucode_i.loops[curr_loop].nb_ops - 1)) begin
 `ifndef SYNTHESIS
-      str = " UPDATE CURRENT LOOP                      ";
+      str = $psprintf(" UPDATE CURRENT LOOP %d                   ", curr_loop);
 `endif
       next_addr = curr_addr + 1;
       next_op   = curr_op + 1;
@@ -159,7 +159,7 @@ module hwpe_ctrl_ucode
     // if loop > 0, go to loop 0
     else if((curr_idx[curr_loop] < ucode_i.range[curr_loop] - 1) && (curr_loop > 0)) begin
 `ifndef SYNTHESIS
-      str = " ITERATE CURRENT LOOP & GOTO LOOP 0       ";
+      str = $psprintf(" ITERATE CURRENT LOOP %d & GOTO LOOP 0      ", curr_loop);
 `endif
       next_loop = 0;
       for(int j=0; j<NB_LOOPS; j++) begin
@@ -175,7 +175,7 @@ module hwpe_ctrl_ucode
     // if we are still within the current loop range, go back to start loop address
     else if(curr_idx[curr_loop] < ucode_i.range[curr_loop] - 1) begin
 `ifndef SYNTHESIS
-      str = " ITERATE CURRENT LOOP                     ";
+      str = $psprintf(" ITERATE CURRENT LOOP %d                  ", curr_loop);
 `endif
       next_addr = ucode_i.loops[curr_loop].ucode_addr;
       next_op   = '0;
@@ -185,7 +185,7 @@ module hwpe_ctrl_ucode
     // if not, go to next loop
     else if (curr_loop < NB_LOOPS-1) begin
 `ifndef SYNTHESIS
-      str = " GOTO NEXT LOOP                           ";
+      str = $psprintf(" GOTO NEXT LOOP %d                        ", curr_loop+1);
 `endif
       next_loop = curr_loop + 1;
       next_addr = ucode_i.loops[curr_loop+1].ucode_addr;
@@ -253,7 +253,7 @@ module hwpe_ctrl_ucode
   end
 
   generate
-    
+
     for(genvar i=0; i<NB_REG; i++) begin : flags_reg_assign
       assign flags_o.offs[i] = registers[i];
     end

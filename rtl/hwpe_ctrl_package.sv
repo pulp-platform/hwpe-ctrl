@@ -25,7 +25,7 @@ package hwpe_ctrl_package;
   parameter int unsigned REGFILE_N_RESERVED_REGS    = REGFILE_N_REGISTERS-REGFILE_N_MANDATORY_REGS-REGFILE_N_MAX_GENERIC_REGS-REGFILE_N_MAX_IO_REGS;
 
   parameter int unsigned UCODE_NB_LOOPS  = 6;
-  parameter int unsigned UCODE_LENGTH    = 16;
+  parameter int unsigned UCODE_LENGTH    = 17;
   parameter int unsigned UCODE_NB_REG    = 4;
   parameter int unsigned UCODE_NB_RO_REG = 28;
   parameter int unsigned UCODE_REG_WIDTH = 32;
