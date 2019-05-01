@@ -47,7 +47,7 @@ module hwpe_ctrl_regfile
   // Extension
   localparam int unsigned EXT_OUT_IDX         = REGFILE_EXT_OUT_IDX;
   localparam int unsigned EXT_IN_IDX          = REGFILE_EXT_IN_IDX;
-  parameter int unsigned EXT_OUT_WIDTH        = REGFILE_EXT_OUT_WIDTH;
+  localparam int unsigned EXT_OUT_WIDTH        = REGFILE_EXT_OUT_WIDTH;
 
   localparam int unsigned SCM_ADDR_WIDTH  = $clog2(N_CONTEXT*N_IO_REGS + N_GENERIC_REGS + N_MANDATORY_REGS - 2);
   localparam int unsigned N_SCM_REGISTERS = 2**SCM_ADDR_WIDTH;
