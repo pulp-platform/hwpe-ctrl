@@ -229,8 +229,9 @@ module hwpe_ctrl_slave
   logic ext_access;
   logic [4:0] ext_id_n;
   assign ext_access = (regfile_flags.is_mandatory == 1'b1) && (regfile_in.addr[LOG_REGS-1:0] == REGFILE_EXT_OUT_IDX) & cfg.req;
-  assign regfile_flags.ext_re = ext_access & cfg.wen;
-  assign regfile_flags.ext_we = ext_access & ~cfg.wen;
+  assign regfile_flags.ext_re     = ext_access & cfg.wen;
+  assign regfile_flags.ext_we     = ext_access & ~cfg.wen;
+  assign regfile_flags.ext_flags  = ctrl_i.ext_flags;
 
   // ID of ext request: bit-extend or slice
   generate if (ID_WIDTH >=5) begin

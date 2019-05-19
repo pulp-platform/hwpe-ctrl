@@ -152,7 +152,7 @@ module hwpe_ctrl_regfile
       end
       // Extension
       else if(flags_i.ext_re) begin
-        regfile_mem_mandatory_dout <= regfile_mem_mandatory[EXT_OUT_IDX];
+        regfile_mem_mandatory_dout <= flags_i.ext_flags;
       end
       // Other Mandatory registers
       else begin
