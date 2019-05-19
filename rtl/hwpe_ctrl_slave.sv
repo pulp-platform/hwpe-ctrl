@@ -241,16 +241,19 @@ module hwpe_ctrl_slave
 
   // If inputs registered: also register flags
   generate
-    if (EXT_IN_REGGED) begin : gen_assign_ext
+    if (~EXT_IN_REGGED) begin : gen_assign_ext
       assign flags_o.ext_we       = regfile_flags.ext_we;
+      assign flags_o.ext_re       = regfile_flags.ext_re;
       assign flags_o.ext_id       = ext_id_n;
     end else begin : gen_assign_ext
       always_ff @(posedge clk_i or negedge rst_ni) begin : proc_ext_flags
         if(~rst_ni) begin
           flags_o.ext_we <= 1'b0;
+          flags_o.ext_re <= 1'b0;
           flags_o.ext_id <= 5'b0;
         end else begin
           flags_o.ext_we <= regfile_flags.ext_we;
+          flags_o.ext_re <= regfile_flags.ext_re;
           flags_o.ext_id <= ext_id_n;
         end
       end
