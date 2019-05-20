@@ -1,4 +1,4 @@
-/* 
+/*
  * hwpe_ctrl_ucode.sv
  * Francesco Conti <fconti@iis.ee.ethz.ch>
  *
@@ -120,7 +120,7 @@ module hwpe_ctrl_ucode
         else if(flags_valid)
           next_accum_state = ACCUM_IDLE;
       end // ACCUM_VALID
-    endcase // curr_accum_state    
+    endcase // curr_accum_state
   end
 
   assign flags_o.accum = (next_accum_state == ACCUM_IDLE)   ? 1'b0 : 1'b1;
@@ -265,7 +265,7 @@ module hwpe_ctrl_ucode
   end
 
   generate
-    
+
     for(genvar i=0; i<NB_REG; i++) begin : flags_reg_assign
       assign flags_o.offs[i] = registers[i];
     end
