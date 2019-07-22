@@ -159,8 +159,8 @@ module hwpe_ctrl_regfile
     always_comb
     begin : regfile_latch_addr_proc
       if(flags_i.is_contexted == 1'b1) begin
-        regfile_latch_rd_addr = regfile_in_i.addr[LOG_REGS-1:0] + regfile_in_i.addr[LOG_REGS_MC-1:LOG_REGS]*N_IO_REGS - N_RESERVED_REGS - N_MAX_GENERIC_REGS + N_GENERIC_REGS - N_MANDATORY_REGS; // one mul x const + one add + one add with const
-        regfile_latch_wr_addr = regfile_in_i.addr[LOG_REGS-1:0] + regfile_in_i.addr[LOG_REGS_MC-1:LOG_REGS]*N_IO_REGS - N_RESERVED_REGS - N_MAX_GENERIC_REGS + N_GENERIC_REGS - N_MANDATORY_REGS; // one mul x const + one add + one add with const
+        regfile_latch_rd_addr = regfile_in_i.addr[LOG_REGS-1:0] + regfile_in_i.addr[LOG_REGS_MC-1:LOG_REGS]*N_IO_REGS - N_RESERVED_REGS - N_GENERIC_REGS - N_MANDATORY_REGS; // one mul x const + one add + one add with const
+        regfile_latch_wr_addr = regfile_in_i.addr[LOG_REGS-1:0] + regfile_in_i.addr[LOG_REGS_MC-1:LOG_REGS]*N_IO_REGS - N_RESERVED_REGS - N_GENERIC_REGS - N_MANDATORY_REGS; // one mul x const + one add + one add with const
       end
       else begin
         regfile_latch_rd_addr = regfile_in_i.addr[LOG_REGS-1:0] - N_RESERVED_REGS - N_MANDATORY_REGS;

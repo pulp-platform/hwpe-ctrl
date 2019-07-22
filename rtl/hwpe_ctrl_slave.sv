@@ -152,7 +152,7 @@ module hwpe_ctrl_slave
   always_comb
   begin : flags_proc
     regfile_flags.is_mandatory  = (cfg.add[LOG_REGS+2-1:2] <= N_MANDATORY_REGS+N_RESERVED_REGS-1)                     ? 1 : 0;  // Accessed reg is mandatory (or reserved)
-    regfile_flags.is_contexted  = (cfg.add[LOG_REGS+2-1:2] > N_MANDATORY_REGS+N_RESERVED_REGS+N_MAX_GENERIC_REGS-1)   ? 1 : 0;  // Accessed reg is contexted
+    regfile_flags.is_contexted  = (cfg.add[LOG_REGS+2-1:2] > N_MANDATORY_REGS+N_RESERVED_REGS+N_GENERIC_REGS-1)   ? 1 : 0;  // Accessed reg is contexted
     regfile_flags.is_read       = (cfg.req == 1'b1 && cfg.wen == 1'b1);
     regfile_flags.is_testset    = (cfg.req == 1'b1 && cfg.wen == 1'b1 && cfg.add[LOG_REGS+2-1:2] == 1)                      ? 1 : 0;  // Operation is a test&set to register context_ts
     regfile_flags.is_trigger    = (cfg.req == 1'b1 && cfg.wen == 1'b0 && cfg.add[LOG_REGS+2-1:2] == 0)                      ? 1 : 0;  // Operation is a trigger
