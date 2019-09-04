@@ -23,4 +23,8 @@ tb_hwpe_ctrl:
   files: [
     tb/tb_hwpe_ctrl_seq_mult.sv,
   ]
+  flags: [
+    skip_synthesis,
+  ]
+  
 
