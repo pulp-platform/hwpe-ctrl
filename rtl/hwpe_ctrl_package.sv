@@ -36,12 +36,12 @@ package hwpe_ctrl_package;
   parameter int unsigned REGFILE_MANDATORY_RESERVED  = 6; // reserved for future usage -- used to be OFFLOADER_ID
   parameter int unsigned REGFILE_MANDATORY_SWEVT     = 7;
 
-  parameter int unsigned UCODE_NB_LOOPS  = 6;
-  parameter int unsigned UCODE_LENGTH    = 17;
-  parameter int unsigned UCODE_NB_REG    = 4;
-  parameter int unsigned UCODE_NB_RO_REG = 28;
-  parameter int unsigned UCODE_REG_WIDTH = 32;
-  parameter int unsigned UCODE_CNT_WIDTH = 12;
+  parameter int unsigned ULOOP_NB_LOOPS  = 6;
+  parameter int unsigned ULOOP_LENGTH    = 17;
+  parameter int unsigned ULOOP_NB_REG    = 4;
+  parameter int unsigned ULOOP_NB_RO_REG = 28;
+  parameter int unsigned ULOOP_REG_WIDTH = 32;
+  parameter int unsigned ULOOP_CNT_WIDTH = 12;
 
   typedef struct packed {
     logic [REGFILE_N_MAX_IO_REGS-1:0]     [31:0] hwpe_params;
@@ -104,32 +104,32 @@ package hwpe_ctrl_package;
   typedef struct packed {
     logic enable;
     logic clear;
-    logic [$clog2(UCODE_NB_LOOPS)-1:0] accum_loop;
-  } ctrl_ucode_t;
+    logic [$clog2(ULOOP_NB_LOOPS)-1:0] accum_loop;
+  } ctrl_uloop_t;
 
   typedef struct packed {
     logic                                           done;
     logic                                           valid;
-    logic [UCODE_NB_REG-1:0]  [31:0]                offs;
-    logic [UCODE_NB_LOOPS-1:0][UCODE_CNT_WIDTH-1:0] idx;
+    logic [ULOOP_NB_REG-1:0]  [31:0]                offs;
+    logic [ULOOP_NB_LOOPS-1:0][ULOOP_CNT_WIDTH-1:0] idx;
     logic                                           accum;
-  } flags_ucode_t;
+  } flags_uloop_t;
 
   typedef struct packed {
-    logic [4:0] ucode_addr;
+    logic [4:0] uloop_addr;
     logic [2:0] nb_ops;
-  } ucode_loops_t;
+  } uloop_loops_t;
 
   typedef struct packed {
     logic       op_sel;
     logic [4:0] a;
     logic [4:0] b;
-  } ucode_code_t;
+  } uloop_code_t;
 
   typedef struct packed {
-    ucode_loops_t [UCODE_NB_LOOPS-1:0]                      loops;
-    ucode_code_t  [UCODE_LENGTH-1:0]                        code;
-    logic         [UCODE_NB_LOOPS-1:0][UCODE_CNT_WIDTH-1:0] range;
-  } ucode_t;
+    uloop_loops_t [ULOOP_NB_LOOPS-1:0]                      loops;
+    uloop_code_t  [ULOOP_LENGTH-1:0]                        code;
+    logic         [ULOOP_NB_LOOPS-1:0][ULOOP_CNT_WIDTH-1:0] range;
+  } uloop_t;
 
 endpackage // hwpe_ctrl_package
