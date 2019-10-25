@@ -23,7 +23,8 @@ module hwpe_ctrl_slave
   parameter int unsigned N_IO_REGS      = 2,
   parameter int unsigned N_GENERIC_REGS = 0,
   parameter int unsigned N_SW_EVT       = 8,
-  parameter int unsigned ID_WIDTH       = 16
+  parameter int unsigned ID_WIDTH       = 16,
+  parameter int unsigned EXT_IN_REGGED  = REGFILE_EXT_IN_REGGED
 )
 (
   input  logic                clk_i,
@@ -222,7 +223,43 @@ module hwpe_ctrl_slave
       assign start_context = (regfile_flags.is_trigger==1 && flags_o.is_working==0) ? 1 : 0;
      
   endgenerate
-   
+
+  // Extension read and write enable, accessing ID LSB
+  logic ext_access;
+  logic [4:0] ext_id_n;
+  assign ext_access = (regfile_flags.is_mandatory == 1'b1) && (regfile_in.addr[LOG_REGS-1:0] == REGFILE_MANDATORY_RESERVED) & cfg.req;
+  assign regfile_flags.ext_re     = ext_access & cfg.wen;
+  assign regfile_flags.ext_we     = ext_access & ~cfg.wen;
+  assign regfile_flags.ext_flags  = ctrl_i.ext_flags;
+
+  // ID of ext request: bit-extend or slice
+  generate if (ID_WIDTH >=5) begin
+    assign ext_id_n = cfg.id[4:0];
+  end else begin
+    assign ext_id_n = {{(5-ID_WIDTH){1'b0}}, cfg.id};
+  end endgenerate
+
+  // If inputs registered: also register flags
+  generate
+    if (~EXT_IN_REGGED) begin : gen_assign_ext
+      assign flags_o.ext_we       = regfile_flags.ext_we;
+      assign flags_o.ext_re       = regfile_flags.ext_re;
+      assign flags_o.ext_id       = ext_id_n;
+    end else begin : gen_assign_ext
+      always_ff @(posedge clk_i or negedge rst_ni) begin : proc_ext_flags
+        if(~rst_ni) begin
+          flags_o.ext_we <= 1'b0;
+          flags_o.ext_re <= 1'b0;
+          flags_o.ext_id <= 5'b0;
+        end else begin
+          flags_o.ext_we <= regfile_flags.ext_we;
+          flags_o.ext_re <= regfile_flags.ext_re;
+          flags_o.ext_id <= ext_id_n;
+        end
+      end
+    end
+  endgenerate
+
   // FSM to set the running state
   always_ff @(posedge clk_i or negedge rst_ni)
   begin : fsm_running

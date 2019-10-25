@@ -23,6 +23,9 @@ package hwpe_ctrl_package;
   parameter int unsigned REGFILE_N_MAX_IO_REGS      = 48;
   parameter int unsigned REGFILE_N_MAX_GENERIC_REGS = 8;
   parameter int unsigned REGFILE_N_RESERVED_REGS    = REGFILE_N_REGISTERS-REGFILE_N_MANDATORY_REGS-REGFILE_N_MAX_GENERIC_REGS-REGFILE_N_MAX_IO_REGS;
+ 
+  // Extension register(s)
+  localparam int unsigned REGFILE_EXT_IN_REGGED     = 1;
 
   parameter int unsigned REGFILE_MANDATORY_TRIGGER   = 0;
   parameter int unsigned REGFILE_MANDATORY_ACQUIRE   = 1;
@@ -43,6 +46,8 @@ package hwpe_ctrl_package;
   typedef struct packed {
     logic [REGFILE_N_MAX_IO_REGS-1:0]     [31:0] hwpe_params;
     logic [REGFILE_N_MAX_GENERIC_REGS-1:0][31:0] generic_params;
+    // Extension
+    logic [31:0]                                 ext_data;
   } ctrl_regfile_t;
 
   typedef struct packed {
@@ -70,11 +75,17 @@ package hwpe_ctrl_package;
     logic                                 is_working;
     logic [$clog2(REGFILE_N_CONTEXT)-1:0] pointer_context;
     logic [$clog2(REGFILE_N_CONTEXT)-1:0] running_context;
+     // Extension
+    logic         ext_we;
+    logic         ext_re;       // Register on bus is extension port
+    logic [31:0]  ext_flags;    // Data provided to read
   } flags_regfile_t;
 
   typedef struct packed {
     logic                     done;
     logic [REGFILE_N_EVT-2:0] evt;
+    // Extension
+    logic [31:0]              ext_flags;
   } ctrl_slave_t;
 
   typedef struct packed {
@@ -84,6 +95,10 @@ package hwpe_ctrl_package;
     logic                                              is_working;
     logic                                              enable;
     logic [7:0]                                        sw_evt;
+    // Extension
+    logic [4:0]                                        ext_id;
+    logic                                              ext_we;
+    logic                                              ext_re;
   } flags_slave_t;
 
   typedef struct packed {

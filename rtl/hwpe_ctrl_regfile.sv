@@ -20,7 +20,8 @@ module hwpe_ctrl_regfile
   parameter int unsigned N_CONTEXT      = REGFILE_N_CONTEXT,
   parameter int unsigned ID_WIDTH       = 16,
   parameter int unsigned N_IO_REGS      = 2,
-  parameter int unsigned N_GENERIC_REGS = 0
+  parameter int unsigned N_GENERIC_REGS = 0,
+  parameter int unsigned EXT_IN_REGGED  = REGFILE_EXT_IN_REGGED
 )
 (
   input  logic           clk_i,
@@ -146,9 +147,15 @@ module hwpe_ctrl_regfile
       else if(clear_i) begin
         regfile_mem_mandatory_dout <= '0;
       end
+      // Extension
+      else if(flags_i.ext_re) begin
+        regfile_mem_mandatory_dout <= flags_i.ext_flags;
+      end
+      // Other Mandatory registers
       else begin
         if(regfile_in_i.addr[LOG_REGS-1:0] > 1)
           regfile_mem_mandatory_dout <= regfile_mem_mandatory[regfile_in_i.addr[LOG_REGS-1:0]];
+        // Unknown address
         else
           regfile_mem_mandatory_dout <= 32'hdeadbeef;
       end
@@ -251,6 +258,7 @@ module hwpe_ctrl_regfile
       r_was_mandatory <= flags_i.is_mandatory;
     end
   end
+  // Extension does not preemt testset, but other registers
   assign regfile_out_o.rdata = (r_was_testset) ? regfile_out_rdata_int : regfile_mem_dout;
 
   generate
@@ -278,6 +286,23 @@ module hwpe_ctrl_regfile
 
   assign regfile_mem_mandatory[REGFILE_MANDATORY_SOFTCLEAR] = '0;
   assign regfile_mem_mandatory[REGFILE_MANDATORY_FINISHED] = r_finished_cnt;
+  // Extension
+  assign regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED] = regfile_in_i.wdata;
+
+  // Assign Extension to external flag for access. Registered on demand
+  generate
+    if (~EXT_IN_REGGED) begin : gen_assign_ext
+        assign reg_file.ext_data = regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED];
+    end else begin : gen_assign_ext
+      always_ff @(posedge clk_i or negedge rst_ni) begin
+        if(~rst_ni) begin
+          reg_file.ext_data <= 0;
+        end else if (flags_i.ext_we) begin
+          reg_file.ext_data <= regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED];
+        end
+      end
+    end
+  endgenerate
 
   logic [$clog2(ID_WIDTH)-1:0] data_src_encoded;
 
@@ -299,27 +324,22 @@ module hwpe_ctrl_regfile
       begin : write_mandatory_proc_byte
         if (rst_ni == 0) begin
           regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 0;
-          regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED][(i+1)*8-1:i*8] <= 0;
         end
         else if (clear_i==1'b1) begin
           regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 0;
-          regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED][(i+1)*8-1:i*8] <= 0;
         end
         else if (flags_i.is_trigger | flags_i.true_done == 1'b1) begin
           if (flags_i.pointer_context==i) begin
             if (flags_i.is_trigger==1) begin
               regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 8'h01;
-              regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED][(i+1)*8-1:i*8] <= data_src_encoded+1;
             end
             else if (flags_i.true_done==1 && flags_i.running_context==flags_i.pointer_context) begin
               regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 8'h00;
-              regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED][(i+1)*8-1:i*8] <= regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED][(i+1)*8-1:i*8];
             end
           end
           else if (flags_i.running_context==i) begin
             if (flags_i.true_done==1) begin
               regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 8'h00;
-              regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED][(i+1)*8-1:i*8] <= regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED][(i+1)*8-1:i*8];
             end
           end
         end
@@ -330,7 +350,6 @@ module hwpe_ctrl_regfile
     if(N_CONTEXT<4) begin
       for(i=N_CONTEXT; i<4; i++) begin
          assign regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] = 'b0;
-         assign regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED][(i+1)*8-1:i*8] = 'b0;
       end
     end
 
