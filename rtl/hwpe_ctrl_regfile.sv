@@ -266,18 +266,18 @@ module hwpe_ctrl_regfile
   always_ff @(posedge clk_i or negedge rst_ni)
   begin : write_mandatory_proc_word
     if (rst_ni == 0) begin
-      regfile_mem_mandatory[4] <= 0;
+      regfile_mem_mandatory[REGFILE_MANDATORY_RUNNING] <= 0;
     end
     else if (clear_i == 1'b1) begin
-      regfile_mem_mandatory[4] <= 0;
+      regfile_mem_mandatory[REGFILE_MANDATORY_RUNNING] <= 0;
     end
     else begin
-      regfile_mem_mandatory[4] <= { 24'b0 , running_job_id };
+      regfile_mem_mandatory[REGFILE_MANDATORY_RUNNING] <= { 24'b0 , running_job_id };
     end
   end
 
-  assign regfile_mem_mandatory[5] = '0;
-  assign regfile_mem_mandatory[2] = r_finished_cnt;
+  assign regfile_mem_mandatory[REGFILE_MANDATORY_SOFTCLEAR] = '0;
+  assign regfile_mem_mandatory[REGFILE_MANDATORY_FINISHED] = r_finished_cnt;
 
   logic [$clog2(ID_WIDTH)-1:0] data_src_encoded;
 
@@ -298,28 +298,28 @@ module hwpe_ctrl_regfile
       always_ff @(posedge clk_i or negedge rst_ni)
       begin : write_mandatory_proc_byte
         if (rst_ni == 0) begin
-          regfile_mem_mandatory[3][(i+1)*8-1:i*8] <= 0;
-          regfile_mem_mandatory[6][(i+1)*8-1:i*8] <= 0;
+          regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 0;
+          regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED][(i+1)*8-1:i*8] <= 0;
         end
         else if (clear_i==1'b1) begin
-          regfile_mem_mandatory[3][(i+1)*8-1:i*8] <= 0;
-          regfile_mem_mandatory[6][(i+1)*8-1:i*8] <= 0;
+          regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 0;
+          regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED][(i+1)*8-1:i*8] <= 0;
         end
         else if (flags_i.is_trigger | flags_i.true_done == 1'b1) begin
           if (flags_i.pointer_context==i) begin
             if (flags_i.is_trigger==1) begin
-              regfile_mem_mandatory[3][(i+1)*8-1:i*8] <= 8'h01;
-              regfile_mem_mandatory[6][(i+1)*8-1:i*8] <= data_src_encoded+1;
+              regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 8'h01;
+              regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED][(i+1)*8-1:i*8] <= data_src_encoded+1;
             end
             else if (flags_i.true_done==1 && flags_i.running_context==flags_i.pointer_context) begin
-              regfile_mem_mandatory[3][(i+1)*8-1:i*8] <= 8'h00;
-              regfile_mem_mandatory[6][(i+1)*8-1:i*8] <= regfile_mem_mandatory[6][(i+1)*8-1:i*8];
+              regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 8'h00;
+              regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED][(i+1)*8-1:i*8] <= regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED][(i+1)*8-1:i*8];
             end
           end
           else if (flags_i.running_context==i) begin
             if (flags_i.true_done==1) begin
-              regfile_mem_mandatory[3][(i+1)*8-1:i*8] <= 8'h00;
-              regfile_mem_mandatory[6][(i+1)*8-1:i*8] <= regfile_mem_mandatory[6][(i+1)*8-1:i*8];
+              regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 8'h00;
+              regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED][(i+1)*8-1:i*8] <= regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED][(i+1)*8-1:i*8];
             end
           end
         end
@@ -329,8 +329,8 @@ module hwpe_ctrl_regfile
 
     if(N_CONTEXT<4) begin
       for(i=N_CONTEXT; i<4; i++) begin
-         assign regfile_mem_mandatory[3][(i+1)*8-1:i*8] = 'b0;
-         assign regfile_mem_mandatory[6][(i+1)*8-1:i*8] = 'b0;
+         assign regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] = 'b0;
+         assign regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED][(i+1)*8-1:i*8] = 'b0;
       end
     end
 
