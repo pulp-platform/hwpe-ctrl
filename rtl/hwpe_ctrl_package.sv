@@ -24,6 +24,15 @@ package hwpe_ctrl_package;
   parameter int unsigned REGFILE_N_MAX_GENERIC_REGS = 8;
   parameter int unsigned REGFILE_N_RESERVED_REGS    = REGFILE_N_REGISTERS-REGFILE_N_MANDATORY_REGS-REGFILE_N_MAX_GENERIC_REGS-REGFILE_N_MAX_IO_REGS;
 
+  parameter int unsigned REGFILE_MANDATORY_TRIGGER   = 0;
+  parameter int unsigned REGFILE_MANDATORY_ACQUIRE   = 1;
+  parameter int unsigned REGFILE_MANDATORY_FINISHED  = 2;
+  parameter int unsigned REGFILE_MANDATORY_STATUS    = 3;
+  parameter int unsigned REGFILE_MANDATORY_RUNNING   = 4;
+  parameter int unsigned REGFILE_MANDATORY_SOFTCLEAR = 5;
+  parameter int unsigned REGFILE_MANDATORY_RESERVED  = 6; // reserved for future usage -- used to be OFFLOADER_ID
+  parameter int unsigned REGFILE_MANDATORY_SWEVT     = 7;
+
   parameter int unsigned UCODE_NB_LOOPS  = 6;
   parameter int unsigned UCODE_LENGTH    = 17;
   parameter int unsigned UCODE_NB_REG    = 4;
