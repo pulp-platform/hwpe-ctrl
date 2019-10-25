@@ -30,7 +30,7 @@ package hwpe_ctrl_package;
   localparam int unsigned REGFILE_EXT_OUT_IDX       = 7;
 
   parameter int unsigned UCODE_NB_LOOPS  = 6;
-  parameter int unsigned UCODE_LENGTH    = 16;
+  parameter int unsigned UCODE_LENGTH    = 17;
   parameter int unsigned UCODE_NB_REG    = 4;
   parameter int unsigned UCODE_NB_RO_REG = 28;
   parameter int unsigned UCODE_REG_WIDTH = 32;

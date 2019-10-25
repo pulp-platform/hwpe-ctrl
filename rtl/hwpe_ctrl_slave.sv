@@ -36,7 +36,6 @@ module hwpe_ctrl_slave
 
   input  ctrl_slave_t         ctrl_i,
   output flags_slave_t        flags_o,
-  output logic [N_SW_EVT-1:0] sw_evt_o,
   output ctrl_regfile_t       reg_file
 );
 

@@ -1,4 +1,4 @@
-/* 
+/*
  * hwpe_ctrl_ucode.sv
  * Francesco Conti <fconti@iis.ee.ethz.ch>
  *
@@ -58,33 +58,35 @@ module hwpe_ctrl_ucode
   enum { ACCUM_IDLE, ACCUM_ACTIVE, ACCUM_VALID } curr_accum_state, next_accum_state;
   logic done_int, done_sticky;
   logic exec_int;
+  logic flags_valid;
 
   always_ff @(posedge clk_i or negedge rst_ni)
   begin
     if(~rst_ni) begin
       busy_sticky <= '0;
       done_sticky <= '0;
-      flags_o.valid <= '0;
+      flags_valid <= '0;
     end
     else if(clear_i | ctrl_i.clear) begin
       busy_sticky <= '0;
       done_sticky <= '0;
-      flags_o.valid <= '0;
+      flags_valid <= '0;
     end
     else begin
-      flags_o.valid <= busy_sticky & ~busy_int;
+      flags_valid <= busy_sticky & ~busy_int;
       if(~busy_int)
         busy_sticky <= 1'b0;
       else if(ctrl_i.enable)
         busy_sticky <= 1'b1;
       if(done_int)
         done_sticky <= 1'b1;
-      else if(flags_o.valid)
+      else if(flags_valid)
         done_sticky <= 1'b0;
     end
   end
 
   assign flags_o.done = done_int | done_sticky;
+  assign flags_o.valid = flags_valid;
 
   assign accum_int = (curr_loop == ctrl_i.accum_loop) ? 1'b1 : 1'b0;
 
@@ -107,33 +109,42 @@ module hwpe_ctrl_ucode
           next_accum_state = ACCUM_ACTIVE;
       end // ACCUM_IDLE
       ACCUM_ACTIVE : begin
-        if(flags_o.valid)
+        if(flags_valid)
           next_accum_state = ACCUM_VALID;
       end // ACCUM_ACTIVE
       ACCUM_VALID : begin
-        if(accum_int & flags_o.valid)
+        if(accum_int & flags_valid)
           next_accum_state = ACCUM_VALID;
         else if(accum_int)
           next_accum_state = ACCUM_ACTIVE;
-        else if(flags_o.valid)
+        else if(flags_valid)
           next_accum_state = ACCUM_IDLE;
       end // ACCUM_VALID
-    endcase // curr_accum_state    
+    endcase // curr_accum_state
   end
 
   assign flags_o.accum = (next_accum_state == ACCUM_IDLE)   ? 1'b0 : 1'b1;
 
 `ifndef SYNTHESIS
-  string str = "";
+  enum { UPDATE, ITERATE_GOTO0, ITERATE, GOTO, TERMINATE, NULL } str_enum;
 
   always_ff @(posedge clk_i or negedge rst_ni)
   begin
     if(rst_ni) begin
-      if(ctrl_i.enable)
-        $display("@%d [%d, %d, %d, %d, %d, %d]%s", curr_addr, curr_idx[5], curr_idx[4], curr_idx[3], curr_idx[2], curr_idx[1], curr_idx[0], str);
+      if(ctrl_i.enable) begin
+        if (str_enum == UPDATE)
+          $display("@%d [%d, %d, %d, %d, %d, %d]%s", curr_addr, curr_idx[5], curr_idx[4], curr_idx[3], curr_idx[2], curr_idx[1], curr_idx[0], " UPDATE CURRENT LOOP                      ");
+        else if(str_enum == ITERATE_GOTO0)
+          $display("@%d [%d, %d, %d, %d, %d, %d]%s", curr_addr, curr_idx[5], curr_idx[4], curr_idx[3], curr_idx[2], curr_idx[1], curr_idx[0], " ITERATE CURRENT LOOP AND GOTO LOOP 0     ");
+        else if(str_enum == ITERATE)
+          $display("@%d [%d, %d, %d, %d, %d, %d]%s", curr_addr, curr_idx[5], curr_idx[4], curr_idx[3], curr_idx[2], curr_idx[1], curr_idx[0], " ITERATE CURRENT LOOP                     ");
+        else if(str_enum == ITERATE)
+          $display("@%d [%d, %d, %d, %d, %d, %d]%s", curr_addr, curr_idx[5], curr_idx[4], curr_idx[3], curr_idx[2], curr_idx[1], curr_idx[0], " GOTO NEXT LOOP                           ");
+        else if(str_enum == TERMINATE)
+          $display("@%d [%d, %d, %d, %d, %d, %d]%s", curr_addr, curr_idx[5], curr_idx[4], curr_idx[3], curr_idx[2], curr_idx[1], curr_idx[0], " TERMINATE                                ");
+      end
     end
   end
-
 `endif
 
   always_comb
@@ -145,11 +156,12 @@ module hwpe_ctrl_ucode
     done_int  = 1'b0;
     busy_int  = 1'b0;
     exec_int  = 1'b0;
+    str_enum  = NULL;
 
     // if next operation is within the current loop, update address
     if((curr_idx[curr_loop] < ucode_i.range[curr_loop] - 1) && (curr_op < ucode_i.loops[curr_loop].nb_ops - 1)) begin
 `ifndef SYNTHESIS
-      str = " UPDATE CURRENT LOOP                      ";
+      str_enum = UPDATE;
 `endif
       next_addr = curr_addr + 1;
       next_op   = curr_op + 1;
@@ -159,7 +171,7 @@ module hwpe_ctrl_ucode
     // if loop > 0, go to loop 0
     else if((curr_idx[curr_loop] < ucode_i.range[curr_loop] - 1) && (curr_loop > 0)) begin
 `ifndef SYNTHESIS
-      str = " ITERATE CURRENT LOOP & GOTO LOOP 0       ";
+      str_enum = ITERATE_GOTO0;
 `endif
       next_loop = 0;
       for(int j=0; j<NB_LOOPS; j++) begin
@@ -175,7 +187,7 @@ module hwpe_ctrl_ucode
     // if we are still within the current loop range, go back to start loop address
     else if(curr_idx[curr_loop] < ucode_i.range[curr_loop] - 1) begin
 `ifndef SYNTHESIS
-      str = " ITERATE CURRENT LOOP                     ";
+      str_enum = ITERATE;
 `endif
       next_addr = ucode_i.loops[curr_loop].ucode_addr;
       next_op   = '0;
@@ -185,7 +197,7 @@ module hwpe_ctrl_ucode
     // if not, go to next loop
     else if (curr_loop < NB_LOOPS-1) begin
 `ifndef SYNTHESIS
-      str = " GOTO NEXT LOOP                           ";
+      str_enum = GOTO;
 `endif
       next_loop = curr_loop + 1;
       next_addr = ucode_i.loops[curr_loop+1].ucode_addr;
@@ -194,7 +206,7 @@ module hwpe_ctrl_ucode
     // end of the loops
     else begin
 `ifndef SYNTHESIS
-      str = " TERMINATE                                ";
+      str_enum = TERMINATE;
 `endif
       next_loop = '0;
       next_addr = '0;
@@ -253,7 +265,7 @@ module hwpe_ctrl_ucode
   end
 
   generate
-    
+
     for(genvar i=0; i<NB_REG; i++) begin : flags_reg_assign
       assign flags_o.offs[i] = registers[i];
     end
