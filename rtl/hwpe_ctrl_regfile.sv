@@ -44,9 +44,6 @@ module hwpe_ctrl_regfile
   localparam int unsigned N_MAX_GENERIC_REGS  = REGFILE_N_MAX_GENERIC_REGS;
   localparam int unsigned LOG_REGS            = $clog2(N_REGISTERS);
   localparam int unsigned LOG_REGS_MC         = LOG_REGS+LOG_CONTEXT;
-  // Extension
-  localparam int unsigned EXT_OUT_IDX         = REGFILE_EXT_OUT_IDX;
-  localparam int unsigned EXT_IN_IDX          = REGFILE_EXT_IN_IDX;
 
   localparam int unsigned SCM_ADDR_WIDTH  = $clog2(N_CONTEXT*N_IO_REGS + N_GENERIC_REGS + N_MANDATORY_REGS - 2);
   localparam int unsigned N_SCM_REGISTERS = 2**SCM_ADDR_WIDTH;
@@ -277,31 +274,31 @@ module hwpe_ctrl_regfile
   always_ff @(posedge clk_i or negedge rst_ni)
   begin : write_mandatory_proc_word
     if (rst_ni == 0) begin
-      regfile_mem_mandatory[4] <= 0;
+      regfile_mem_mandatory[REGFILE_MANDATORY_RUNNING] <= 0;
     end
     else if (clear_i == 1'b1) begin
-      regfile_mem_mandatory[4] <= 0;
+      regfile_mem_mandatory[REGFILE_MANDATORY_RUNNING] <= 0;
     end
     else begin
-      regfile_mem_mandatory[4] <= { 24'b0 , running_job_id };
+      regfile_mem_mandatory[REGFILE_MANDATORY_RUNNING] <= { 24'b0 , running_job_id };
     end
   end
 
-  assign regfile_mem_mandatory[5] = '0;
-  assign regfile_mem_mandatory[2] = r_finished_cnt;
+  assign regfile_mem_mandatory[REGFILE_MANDATORY_SOFTCLEAR] = '0;
+  assign regfile_mem_mandatory[REGFILE_MANDATORY_FINISHED] = r_finished_cnt;
   // Extension
-  assign regfile_mem_mandatory[EXT_IN_IDX] = regfile_in_i.wdata;
+  assign regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED] = regfile_in_i.wdata;
 
   // Assign Extension to external flag for access. Registered on demand
   generate
     if (~EXT_IN_REGGED) begin : gen_assign_ext
-        assign reg_file.ext_data = regfile_mem_mandatory[EXT_IN_IDX];
+        assign reg_file.ext_data = regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED];
     end else begin : gen_assign_ext
       always_ff @(posedge clk_i or negedge rst_ni) begin
         if(~rst_ni) begin
           reg_file.ext_data <= 0;
         end else if (flags_i.ext_we) begin
-          reg_file.ext_data <= regfile_mem_mandatory[EXT_IN_IDX];
+          reg_file.ext_data <= regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED];
         end
       end
     end
@@ -326,28 +323,23 @@ module hwpe_ctrl_regfile
       always_ff @(posedge clk_i or negedge rst_ni)
       begin : write_mandatory_proc_byte
         if (rst_ni == 0) begin
-          regfile_mem_mandatory[3][(i+1)*8-1:i*8] <= 0;
-          regfile_mem_mandatory[6][(i+1)*8-1:i*8] <= 0;
+          regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 0;
         end
         else if (clear_i==1'b1) begin
-          regfile_mem_mandatory[3][(i+1)*8-1:i*8] <= 0;
-          regfile_mem_mandatory[6][(i+1)*8-1:i*8] <= 0;
+          regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 0;
         end
         else if (flags_i.is_trigger | flags_i.true_done == 1'b1) begin
           if (flags_i.pointer_context==i) begin
             if (flags_i.is_trigger==1) begin
-              regfile_mem_mandatory[3][(i+1)*8-1:i*8] <= 8'h01;
-              regfile_mem_mandatory[6][(i+1)*8-1:i*8] <= data_src_encoded+1;
+              regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 8'h01;
             end
             else if (flags_i.true_done==1 && flags_i.running_context==flags_i.pointer_context) begin
-              regfile_mem_mandatory[3][(i+1)*8-1:i*8] <= 8'h00;
-              regfile_mem_mandatory[6][(i+1)*8-1:i*8] <= regfile_mem_mandatory[6][(i+1)*8-1:i*8];
+              regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 8'h00;
             end
           end
           else if (flags_i.running_context==i) begin
             if (flags_i.true_done==1) begin
-              regfile_mem_mandatory[3][(i+1)*8-1:i*8] <= 8'h00;
-              regfile_mem_mandatory[6][(i+1)*8-1:i*8] <= regfile_mem_mandatory[6][(i+1)*8-1:i*8];
+              regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 8'h00;
             end
           end
         end
@@ -357,8 +349,7 @@ module hwpe_ctrl_regfile
 
     if(N_CONTEXT<4) begin
       for(i=N_CONTEXT; i<4; i++) begin
-         assign regfile_mem_mandatory[3][(i+1)*8-1:i*8] = 'b0;
-         assign regfile_mem_mandatory[6][(i+1)*8-1:i*8] = 'b0;
+         assign regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] = 'b0;
       end
     end
 

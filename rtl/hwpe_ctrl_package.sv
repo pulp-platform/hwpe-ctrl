@@ -26,8 +26,15 @@ package hwpe_ctrl_package;
  
   // Extension register(s)
   localparam int unsigned REGFILE_EXT_IN_REGGED     = 1;
-  localparam int unsigned REGFILE_EXT_IN_IDX        = 7;
-  localparam int unsigned REGFILE_EXT_OUT_IDX       = 7;
+
+  parameter int unsigned REGFILE_MANDATORY_TRIGGER   = 0;
+  parameter int unsigned REGFILE_MANDATORY_ACQUIRE   = 1;
+  parameter int unsigned REGFILE_MANDATORY_FINISHED  = 2;
+  parameter int unsigned REGFILE_MANDATORY_STATUS    = 3;
+  parameter int unsigned REGFILE_MANDATORY_RUNNING   = 4;
+  parameter int unsigned REGFILE_MANDATORY_SOFTCLEAR = 5;
+  parameter int unsigned REGFILE_MANDATORY_RESERVED  = 6; // reserved for future usage -- used to be OFFLOADER_ID
+  parameter int unsigned REGFILE_MANDATORY_SWEVT     = 7;
 
   parameter int unsigned UCODE_NB_LOOPS  = 6;
   parameter int unsigned UCODE_LENGTH    = 17;

@@ -155,8 +155,8 @@ module hwpe_ctrl_slave
     regfile_flags.is_mandatory  = (cfg.add[LOG_REGS+2-1:2] <= N_MANDATORY_REGS+N_RESERVED_REGS-1)                     ? 1 : 0;  // Accessed reg is mandatory (or reserved)
     regfile_flags.is_contexted  = (cfg.add[LOG_REGS+2-1:2] > N_MANDATORY_REGS+N_RESERVED_REGS+N_MAX_GENERIC_REGS-1)   ? 1 : 0;  // Accessed reg is contexted
     regfile_flags.is_read       = (cfg.req == 1'b1 && cfg.wen == 1'b1);
-    regfile_flags.is_testset    = (cfg.req == 1'b1 && cfg.wen == 1'b1 && cfg.add[LOG_REGS+2-1:2] == 1)                      ? 1 : 0;  // Operation is a test&set to register context_ts
-    regfile_flags.is_trigger    = (cfg.req == 1'b1 && cfg.wen == 1'b0 && cfg.add[LOG_REGS+2-1:2] == 0)                      ? 1 : 0;  // Operation is a trigger
+    regfile_flags.is_testset    = (cfg.req == 1'b1 && cfg.wen == 1'b1 && cfg.add[LOG_REGS+2-1:2] == REGFILE_MANDATORY_ACQUIRE) ? 1 : 0;  // Operation is a test&set to register context_ts
+    regfile_flags.is_trigger    = (cfg.req == 1'b1 && cfg.wen == 1'b0 && cfg.add[LOG_REGS+2-1:2] == REGFILE_MANDATORY_TRIGGER) ? 1 : 0;  // Operation is a trigger
     regfile_flags.true_done     = ctrl_i.done & flags_o.is_working;                                                             // This is necessary because sometimes done is asserted as soon as rst_ni becomes 1
     flags_o.enable              = s_enable_after[3];                                                                            // Enable after three cycles from rst_ni
   end
@@ -227,7 +227,7 @@ module hwpe_ctrl_slave
   // Extension read and write enable, accessing ID LSB
   logic ext_access;
   logic [4:0] ext_id_n;
-  assign ext_access = (regfile_flags.is_mandatory == 1'b1) && (regfile_in.addr[LOG_REGS-1:0] == REGFILE_EXT_OUT_IDX) & cfg.req;
+  assign ext_access = (regfile_flags.is_mandatory == 1'b1) && (regfile_in.addr[LOG_REGS-1:0] == REGFILE_MANDATORY_RESERVED) & cfg.req;
   assign regfile_flags.ext_re     = ext_access & cfg.wen;
   assign regfile_flags.ext_we     = ext_access & ~cfg.wen;
   assign regfile_flags.ext_flags  = ctrl_i.ext_flags;
@@ -373,7 +373,7 @@ module hwpe_ctrl_slave
     else if(clear_o == 1'b1) begin
       flags_o.sw_evt <= '0;
     end
-    else if((cfg.req == 1'b1) && (cfg.wen == 1'b0) && (cfg.add[LOG_REGS+2-1:2]) == 7) begin
+    else if((cfg.req == 1'b1) && (cfg.wen == 1'b0) && (cfg.add[LOG_REGS+2-1:2]) == REGFILE_MANDATORY_SWEVT) begin
       flags_o.sw_evt[cfg.data[3:0]] <= 1'b1;
     end
     else begin
@@ -388,7 +388,7 @@ module hwpe_ctrl_slave
       clear_o <= 1'b0;
     end
     else begin
-      if((s_clear == '0) && ((cfg.req == 1'b1) && (cfg.wen == 1'b0) && (cfg.add[LOG_REGS+2-1:2]) == 5))
+      if((s_clear == '0) && ((cfg.req == 1'b1) && (cfg.wen == 1'b0) && (cfg.add[LOG_REGS+2-1:2]) == REGFILE_MANDATORY_SOFTCLEAR))
         s_clear <= 2'b01;
       else if (s_clear != '0)
         s_clear <= s_clear + 2'b01;
