@@ -54,8 +54,8 @@ module hwpe_ctrl_uloop
   logic [REG_WIDTH-1:0] uloop_execute;
 
   logic busy_int, busy_sticky;
-  logic accum_int;
-  enum { ACCUM_IDLE, ACCUM_ACTIVE, ACCUM_VALID } curr_accum_state, next_accum_state;
+  // logic accum_int;
+  // enum { ACCUM_IDLE, ACCUM_ACTIVE, ACCUM_VALID } curr_accum_state, next_accum_state;
   logic done_int, done_sticky;
   logic exec_int;
   logic flags_valid;
@@ -87,43 +87,6 @@ module hwpe_ctrl_uloop
 
   assign flags_o.done = done_int | done_sticky;
   assign flags_o.valid = flags_valid;
-
-  assign accum_int = (curr_loop == ctrl_i.accum_loop) ? 1'b1 : 1'b0;
-
-  always_ff @(posedge clk_i or negedge rst_ni)
-  begin : accum_flag_fsm_seq
-    if(~rst_ni)
-      curr_accum_state <= ACCUM_IDLE;
-    else if(clear_i | ctrl_i.clear)
-      curr_accum_state <= ACCUM_IDLE;
-    else
-      curr_accum_state <= next_accum_state;
-  end
-
-  always_comb
-  begin : accum_flag_fsm_comb
-    next_accum_state = curr_accum_state;
-    case(curr_accum_state)
-      ACCUM_IDLE : begin
-        if(accum_int)
-          next_accum_state = ACCUM_ACTIVE;
-      end // ACCUM_IDLE
-      ACCUM_ACTIVE : begin
-        if(flags_valid)
-          next_accum_state = ACCUM_VALID;
-      end // ACCUM_ACTIVE
-      ACCUM_VALID : begin
-        if(accum_int & flags_valid)
-          next_accum_state = ACCUM_VALID;
-        else if(accum_int)
-          next_accum_state = ACCUM_ACTIVE;
-        else if(flags_valid)
-          next_accum_state = ACCUM_IDLE;
-      end // ACCUM_VALID
-    endcase // curr_accum_state
-  end
-
-  assign flags_o.accum = (next_accum_state == ACCUM_IDLE)   ? 1'b0 : 1'b1;
 
 `ifndef SYNTHESIS
   enum { UPDATE, ITERATE_GOTO0, ITERATE, GOTO, TERMINATE, NULL } str_enum;

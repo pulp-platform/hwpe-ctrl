@@ -23,7 +23,7 @@ package hwpe_ctrl_package;
   parameter int unsigned REGFILE_N_MAX_IO_REGS      = 48;
   parameter int unsigned REGFILE_N_MAX_GENERIC_REGS = 8;
   parameter int unsigned REGFILE_N_RESERVED_REGS    = REGFILE_N_REGISTERS-REGFILE_N_MANDATORY_REGS-REGFILE_N_MAX_GENERIC_REGS-REGFILE_N_MAX_IO_REGS;
- 
+
   // Extension register(s)
   localparam int unsigned REGFILE_EXT_IN_REGGED     = 1;
 
@@ -104,7 +104,6 @@ package hwpe_ctrl_package;
   typedef struct packed {
     logic enable;
     logic clear;
-    logic [$clog2(ULOOP_NB_LOOPS)-1:0] accum_loop;
   } ctrl_uloop_t;
 
   typedef struct packed {
@@ -112,7 +111,6 @@ package hwpe_ctrl_package;
     logic                                           valid;
     logic [ULOOP_NB_REG-1:0]  [31:0]                offs;
     logic [ULOOP_NB_LOOPS-1:0][ULOOP_CNT_WIDTH-1:0] idx;
-    logic                                           accum;
   } flags_uloop_t;
 
   typedef struct packed {
