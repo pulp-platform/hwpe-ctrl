@@ -22,13 +22,13 @@ import hwpe_ctrl_package::*;
 
 module hwpe_ctrl_uloop
 #(
-  parameter int unsigned LENGTH    = ULOOP_NB_LOOPS,
-  parameter int unsigned NB_LOOPS  = ULOOP_LENGTH,
-  parameter int unsigned NB_RO_REG = ULOOP_NB_RO_REG,
-  parameter int unsigned NB_REG    = ULOOP_NB_REG,
-  parameter int unsigned REG_WIDTH = ULOOP_REG_WIDTH,
-  parameter int unsigned CNT_WIDTH = ULOOP_CNT_WIDTH,
-  parameter int unsigned SHADOWED  = 1
+  parameter int unsigned LENGTH    = hwpe_ctrl_package::ULOOP_NB_LOOPS,
+  parameter int unsigned NB_LOOPS  = hwpe_ctrl_package::ULOOP_LENGTH,
+  parameter int unsigned NB_RO_REG = hwpe_ctrl_package::ULOOP_NB_RO_REG,
+  parameter int unsigned NB_REG    = hwpe_ctrl_package::ULOOP_NB_REG,
+  parameter int unsigned REG_WIDTH = hwpe_ctrl_package::ULOOP_REG_WIDTH,
+  parameter int unsigned CNT_WIDTH = hwpe_ctrl_package::ULOOP_CNT_WIDTH,
+  parameter int unsigned SHADOWED  = hwpe_ctrl_package::ULOOP_SHADOWED
 )
 (
   // global signals
@@ -39,7 +39,7 @@ module hwpe_ctrl_uloop
   // ctrl & flags
   input  ctrl_uloop_t                         ctrl_i,
   output flags_uloop_t                        flags_o,
-  input  uloop_t                              uloop_i,
+  input  uloop_code_t                         uloop_code_i,
   input  logic [NB_RO_REG-1:0][REG_WIDTH-1:0] registers_read_i
 );
 
@@ -89,6 +89,7 @@ module hwpe_ctrl_uloop
 
   assign flags_int.done = done_int | done_sticky;
   assign flags_int.valid = flags_valid;
+  assign flags_int.ready = 1'b1;
 
 `ifndef SYNTHESIS
   enum { UPDATE, ITERATE_GOTO0, ITERATE, GOTO, TERMINATE, NULL } str_enum;
@@ -124,7 +125,7 @@ module hwpe_ctrl_uloop
     str_enum  = NULL;
 
     // if next operation is within the current loop, update address
-    if((curr_idx[curr_loop] < uloop_i.range[curr_loop] - 1) && (curr_op < uloop_i.loops[curr_loop].nb_ops - 1)) begin
+    if((curr_idx[curr_loop] < uloop_code_i.range[curr_loop] - 1) && (curr_op < uloop_code_i.loops[curr_loop].nb_ops - 1)) begin
 `ifndef SYNTHESIS
       str_enum = UPDATE;
 `endif
@@ -134,7 +135,7 @@ module hwpe_ctrl_uloop
       exec_int  = 1'b1;
     end
     // if loop > 0, go to loop 0
-    else if((curr_idx[curr_loop] < uloop_i.range[curr_loop] - 1) && (curr_loop > 0)) begin
+    else if((curr_idx[curr_loop] < uloop_code_i.range[curr_loop] - 1) && (curr_loop > 0)) begin
 `ifndef SYNTHESIS
       str_enum = ITERATE_GOTO0;
 `endif
@@ -145,16 +146,16 @@ module hwpe_ctrl_uloop
         else if(curr_loop == j)
           next_idx[j] = curr_idx[curr_loop] + 1;
       end
-      next_addr = uloop_i.loops[0].uloop_addr;
+      next_addr = uloop_code_i.loops[0].uloop_addr;
       next_op   = '0;
       exec_int  = 1'b1;
     end
     // if we are still within the current loop range, go back to start loop address
-    else if(curr_idx[curr_loop] < uloop_i.range[curr_loop] - 1) begin
+    else if(curr_idx[curr_loop] < uloop_code_i.range[curr_loop] - 1) begin
 `ifndef SYNTHESIS
       str_enum = ITERATE;
 `endif
-      next_addr = uloop_i.loops[curr_loop].uloop_addr;
+      next_addr = uloop_code_i.loops[curr_loop].uloop_addr;
       next_op   = '0;
       next_idx[curr_loop] = curr_idx + 1;
       exec_int  = 1'b1;
@@ -165,7 +166,7 @@ module hwpe_ctrl_uloop
       str_enum = GOTO;
 `endif
       next_loop = curr_loop + 1;
-      next_addr = uloop_i.loops[curr_loop+1].uloop_addr;
+      next_addr = uloop_code_i.loops[curr_loop+1].uloop_addr;
       next_op   = '0;
     end
     // end of the loops
@@ -206,14 +207,14 @@ module hwpe_ctrl_uloop
   assign registers_read[NB_REG-1:0] = registers;
   assign registers_read[NB_RO_REG+NB_REG-1:NB_REG] = registers_read_i;
 
-  assign uloop_execute_add = registers_read[uloop_i.code[curr_addr].a] + registers_read[uloop_i.code[curr_addr].b];
-  assign uloop_execute = (uloop_i.code[curr_addr].op_sel) ? uloop_execute_add : registers_read[uloop_i.code[curr_addr].b];
+  assign uloop_execute_add = registers_read[uloop_code_i.code[curr_addr].a] + registers_read[uloop_code_i.code[curr_addr].b];
+  assign uloop_execute = (uloop_code_i.code[curr_addr].op_sel) ? uloop_execute_add : registers_read[uloop_code_i.code[curr_addr].b];
 
   always_comb
   begin : uloop_execute_comb
     next_registers = registers;
     if(exec_int)
-      next_registers[uloop_i.code[curr_addr].a] = uloop_execute;
+      next_registers[uloop_code_i.code[curr_addr].a] = uloop_execute;
   end
 
   always_ff @(posedge clk_i or negedge rst_ni)
@@ -287,6 +288,7 @@ module hwpe_ctrl_uloop
       begin
         flags_o = shadow_flags_rd;
         flags_o.valid = out_valid;
+        flags_o.ready = shadow_flags_wr.valid;
       end
 
     end // shadowed_gen

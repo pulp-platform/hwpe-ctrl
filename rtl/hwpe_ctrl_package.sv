@@ -42,6 +42,7 @@ package hwpe_ctrl_package;
   parameter int unsigned ULOOP_NB_RO_REG = 28;
   parameter int unsigned ULOOP_REG_WIDTH = 32;
   parameter int unsigned ULOOP_CNT_WIDTH = 12;
+  parameter int unsigned ULOOP_SHADOWED  = 1;
 
   typedef struct packed {
     logic [REGFILE_N_MAX_IO_REGS-1:0]     [31:0] hwpe_params;
@@ -109,6 +110,7 @@ package hwpe_ctrl_package;
   typedef struct packed {
     logic                                           done;
     logic                                           valid;
+    logic                                           ready;
     logic [ULOOP_NB_REG-1:0]  [31:0]                offs;
     logic [ULOOP_NB_LOOPS-1:0][ULOOP_CNT_WIDTH-1:0] idx;
   } flags_uloop_t;
@@ -122,12 +124,12 @@ package hwpe_ctrl_package;
     logic       op_sel;
     logic [4:0] a;
     logic [4:0] b;
-  } uloop_code_t;
+  } uloop_bytecode_t;
 
   typedef struct packed {
-    uloop_loops_t [ULOOP_NB_LOOPS-1:0]                      loops;
-    uloop_code_t  [ULOOP_LENGTH-1:0]                        code;
-    logic         [ULOOP_NB_LOOPS-1:0][ULOOP_CNT_WIDTH-1:0] range;
-  } uloop_t;
+    uloop_loops_t     [ULOOP_NB_LOOPS-1:0]                      loops;
+    uloop_bytecode_t  [ULOOP_LENGTH-1:0]                        code;
+    logic             [ULOOP_NB_LOOPS-1:0][ULOOP_CNT_WIDTH-1:0] range;
+  } uloop_code_t;
 
 endpackage // hwpe_ctrl_package

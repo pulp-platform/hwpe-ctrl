@@ -1,0 +1,69 @@
+#
+# code.yml
+# Francesco Conti <fconti@iis.ee.ethz.ch>
+#
+# Copyright (C) 2017-2019 ETH Zurich, University of Bologna
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# See LICENSE.sw.txt for details.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# LOOP0 loop_stream_inner: for jj in range(0,nif/TP)
+# LOOP1 loop_filter_x    : for k in range(0,fs)
+# LOOP2 loop_filter_y    : for l in range(0,fs)
+# LOOP3 loop_stream_outer: for ii in range(0,nof/TP)
+# LOOP4 loop_spatial_x   : for m in range(0,ow)
+# LOOP5 loop_spatial_y   : for n in range(0,oh)
+
+# mnemonics to simplify microcode writing
+mnemonics:
+    W:           0
+    x:           1
+    y:           2
+    x_major:     3
+    nif:         4
+    nof:         5
+    ow_X_nof:    6
+    w_X_nif:     7
+    TPin:        8
+    nif_X_fs2:   9
+    TPout:       10
+    x_iter:      11
+    x_maj_iter:  12
+    zero:        14
+    TP2:         15
+
+# actual microcode
+code:
+  loop_stream_inner: # for k_in_major in range(0, N_in/TP)
+    - { op : add, a: W,       b: TPin }
+    - { op : add, a: x,       b: TPin }
+  loop_filter_x: # for u_j in range(0, fs)
+    - { op : add, a: W,       b: TPin }
+    - { op : add, a: x,       b: TPin }
+  loop_filter_y: # for u_i in range(0, fs)
+    - { op : add, a: W,       b: TPin }
+    - { op : add, a: x,       b: x_iter }
+  loop_stream_outer: # for k_out_major in range(0, N_out/TP)
+    - { op : add, a: W,       b: TPin }
+    - { op : add, a: y,       b: TPout }
+    - { op : mv,  a: x,       b: x_major }
+  loop_spatial_x: # for j in range(0, w_out)
+    - { op : mv,  a: W,       b: zero }
+    - { op : add, a: y,       b: TPout }
+    - { op : add, a: x_major, b: nif }
+    - { op : mv,  a: x,       b: x_major }
+  loop_spatial_y: # for i in range(0, h_out)
+    - { op : mv,  a: W,       b: zero }
+    - { op : add, a: y,       b: TPout }
+    - { op : add, a: x_major, b: x_maj_iter }
+    - { op : mv,  a: x,       b: x_major }
