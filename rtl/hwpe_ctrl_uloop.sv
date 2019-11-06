@@ -27,7 +27,8 @@ module hwpe_ctrl_uloop
   parameter int unsigned NB_RO_REG = ULOOP_NB_RO_REG,
   parameter int unsigned NB_REG    = ULOOP_NB_REG,
   parameter int unsigned REG_WIDTH = ULOOP_REG_WIDTH,
-  parameter int unsigned CNT_WIDTH = ULOOP_CNT_WIDTH
+  parameter int unsigned CNT_WIDTH = ULOOP_CNT_WIDTH,
+  parameter int unsigned SHADOWED  = 1
 )
 (
   // global signals
@@ -54,11 +55,12 @@ module hwpe_ctrl_uloop
   logic [REG_WIDTH-1:0] uloop_execute;
 
   logic busy_int, busy_sticky;
-  // logic accum_int;
-  // enum { ACCUM_IDLE, ACCUM_ACTIVE, ACCUM_VALID } curr_accum_state, next_accum_state;
   logic done_int, done_sticky;
   logic exec_int;
   logic flags_valid;
+  flags_uloop_t flags_int;
+
+  logic enable_int;
 
   always_ff @(posedge clk_i or negedge rst_ni)
   begin
@@ -76,7 +78,7 @@ module hwpe_ctrl_uloop
       flags_valid <= busy_sticky & ~busy_int;
       if(~busy_int)
         busy_sticky <= 1'b0;
-      else if(ctrl_i.enable)
+      else if(enable_int)
         busy_sticky <= 1'b1;
       if(done_int)
         done_sticky <= 1'b1;
@@ -85,8 +87,8 @@ module hwpe_ctrl_uloop
     end
   end
 
-  assign flags_o.done = done_int | done_sticky;
-  assign flags_o.valid = flags_valid;
+  assign flags_int.done = done_int | done_sticky;
+  assign flags_int.valid = flags_valid;
 
 `ifndef SYNTHESIS
   enum { UPDATE, ITERATE_GOTO0, ITERATE, GOTO, TERMINATE, NULL } str_enum;
@@ -94,7 +96,7 @@ module hwpe_ctrl_uloop
   always_ff @(posedge clk_i or negedge rst_ni)
   begin
     if(rst_ni) begin
-      if(ctrl_i.enable) begin
+      if(enable_int) begin
         if (str_enum == UPDATE)
           $display("@%d [%d, %d, %d, %d, %d, %d]%s", curr_addr, curr_idx[5], curr_idx[4], curr_idx[3], curr_idx[2], curr_idx[1], curr_idx[0], " UPDATE CURRENT LOOP                      ");
         else if(str_enum == ITERATE_GOTO0)
@@ -193,7 +195,7 @@ module hwpe_ctrl_uloop
       curr_op   <= '0;
       curr_idx  <= '0;
     end
-    else if(ctrl_i.enable) begin
+    else if(enable_int) begin
       curr_addr <= next_addr;
       curr_loop <= next_loop;
       curr_op   <= next_op;
@@ -222,7 +224,7 @@ module hwpe_ctrl_uloop
     else if(clear_i | ctrl_i.clear) begin
       registers <= '0;
     end
-    else if(ctrl_i.enable) begin
+    else if(enable_int) begin
       registers <= next_registers;
     end
   end
@@ -230,11 +232,68 @@ module hwpe_ctrl_uloop
   generate
 
     for(genvar i=0; i<NB_REG; i++) begin : flags_reg_assign
-      assign flags_o.offs[i] = registers[i];
+      assign flags_int.offs[i] = registers[i];
     end
     for(genvar i=0; i<NB_LOOPS; i++) begin : flags_idx_assign
-      assign flags_o.idx [i] = curr_idx[i];
+      assign flags_int.idx [i] = curr_idx[i];
     end
+
+  endgenerate
+
+  generate
+
+    if(SHADOWED) begin: shadowed_gen
+
+      flags_uloop_t shadow_flags_wr, shadow_flags_rd;
+      logic out_valid;
+
+      // when the shadow register is not valid, enable the uloop
+      assign enable_int = ~shadow_flags_wr.valid & ~flags_valid & ~clear_i;
+
+      // the shadow register is updated when flags_valid is 1'b1
+      always_ff @(posedge clk_i or negedge rst_ni)
+      begin
+        if(~rst_ni)
+          shadow_flags_wr <= '0;
+        else if(clear_i | ctrl_i.enable)
+          shadow_flags_wr <= '0;
+        else if (flags_int.valid)
+          shadow_flags_wr <= flags_int;
+      end
+
+      // the uloop replies with the already computed values as soon as asked
+      always_ff @(posedge clk_i or negedge rst_ni)
+      begin
+        if(~rst_ni)
+          out_valid <= 1'b0;
+        else if(clear_i)
+          out_valid <= 1'b0;
+        else
+          out_valid <= ctrl_i.enable;
+      end
+
+      // the read shadow flags are updated on ctrl_i enable
+      always_ff @(posedge clk_i or negedge rst_ni)
+      begin
+        if(~rst_ni)
+          shadow_flags_rd <= '0;
+        else if(clear_i)
+          shadow_flags_rd <= '0;
+        else if(ctrl_i.enable)
+          shadow_flags_rd <= shadow_flags_wr;
+      end
+
+      always_comb
+      begin
+        flags_o = shadow_flags_rd;
+        flags_o.valid = out_valid;
+      end
+
+    end // shadowed_gen
+    else begin: no_shadowed_gen
+      assign enable_int = ctrl_i.enable;
+      assign flags_o    = flags_int;
+    end // no_shadowed_gen
 
   endgenerate
 
