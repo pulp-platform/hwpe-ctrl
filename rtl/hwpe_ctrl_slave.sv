@@ -43,7 +43,7 @@ module hwpe_ctrl_slave
   localparam int unsigned N_MANDATORY_REGS    = REGFILE_N_MANDATORY_REGS;
   localparam int unsigned N_RESERVED_REGS     = REGFILE_N_RESERVED_REGS;
   localparam int unsigned LOG_REGS            = $clog2(N_REGISTERS);
-  localparam int unsigned LOG_CONTEXT         = $clog2(N_CONTEXT);
+  localparam int unsigned LOG_CONTEXT         = N_CONTEXT > 1 ? $clog2(N_CONTEXT) : 1;
   localparam int unsigned LOG_REGS_MC         = LOG_REGS+LOG_CONTEXT;
   localparam int unsigned N_MAX_IO_REGS       = REGFILE_N_MAX_IO_REGS;
   localparam int unsigned N_MAX_GENERIC_REGS  = REGFILE_N_MAX_GENERIC_REGS;
@@ -82,13 +82,13 @@ module hwpe_ctrl_slave
     begin
       offloading_core <= '0;
     end
-    else 
+    else
     begin
         if (regfile_flags.is_trigger == 1)
         begin
           for(int i=0; i<N_CORES; i++)
             if (cfg.id[i] == 1'b1)
-              offloading_core[pointer_context] <= i; 
+              offloading_core[pointer_context] <= i;
         end
     end
   end
@@ -136,12 +136,12 @@ module hwpe_ctrl_slave
             counter_pending <= counter_pending - 1;
         end
       end
-       
+
       assign regfile_flags.full_context = (counter_pending == N_CONTEXT) ? 1 : 0;  // All contexts are busy
-       
+
     end
     else begin
-      assign pointer_context    = 'b0;
+      assign pointer_context    = regfile_flags.is_trigger;
       assign running_context    = 'b0;
       assign counter_pending    = (flags_o.is_working==1'b1) ? 1 : 'b0;
       assign regfile_flags.full_context = flags_o.is_working;
@@ -163,9 +163,9 @@ module hwpe_ctrl_slave
 
   generate
     logic [LOG_REGS_MC-LOG_REGS-1:0] context_addr;
-    assign context_addr = cfg.add[LOG_REGS_MC+2:LOG_REGS+2] - 1;
 
     if(N_CONTEXT>1) begin : multi_context_gen
+    assign context_addr = cfg.add[LOG_REGS_MC+2:LOG_REGS+2] - 1;
       always_comb
       begin
         if(~cfg.wen) begin
@@ -180,6 +180,7 @@ module hwpe_ctrl_slave
       end
     end
     else begin : single_context_gen
+      assign context_addr = '0;
       assign regfile_in.addr = cfg.add[LOG_REGS+2-1:2];
     end
 
@@ -221,7 +222,7 @@ module hwpe_ctrl_slave
       assign start_context = (running_context==pointer_context && regfile_flags.full_context==0) ? 1 : 0;
     else
       assign start_context = (regfile_flags.is_trigger==1 && flags_o.is_working==0) ? 1 : 0;
-     
+
   endgenerate
 
   // Extension read and write enable, accessing ID LSB

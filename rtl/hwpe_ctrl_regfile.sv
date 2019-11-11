@@ -163,17 +163,34 @@ module hwpe_ctrl_regfile
     assign regfile_mem_dout = (~r_was_mandatory) ? regfile_latch_rdata : regfile_mem_mandatory_dout;
     assign regfile_latch_re = flags_i.is_read;
     assign regfile_latch_we = (~flags_i.is_mandatory) & regfile_in_i.wren;
-    always_comb
-    begin : regfile_latch_addr_proc
-      if(flags_i.is_contexted == 1'b1) begin
-        regfile_latch_rd_addr = regfile_in_i.addr[LOG_REGS-1:0] + regfile_in_i.addr[LOG_REGS_MC-1:LOG_REGS]*N_IO_REGS - N_RESERVED_REGS - N_MAX_GENERIC_REGS + N_GENERIC_REGS - N_MANDATORY_REGS; // one mul x const + one add + one add with const
-        regfile_latch_wr_addr = regfile_in_i.addr[LOG_REGS-1:0] + regfile_in_i.addr[LOG_REGS_MC-1:LOG_REGS]*N_IO_REGS - N_RESERVED_REGS - N_MAX_GENERIC_REGS + N_GENERIC_REGS - N_MANDATORY_REGS; // one mul x const + one add + one add with const
+
+    if(N_CONTEXT > 1) begin : regfile_latch_addr_multicontext_gen
+      always_comb
+      begin : regfile_latch_addr_proc
+        if(flags_i.is_contexted == 1'b1) begin
+          regfile_latch_rd_addr = regfile_in_i.addr[LOG_REGS-1:0] + regfile_in_i.addr[LOG_REGS_MC-1:LOG_REGS]*N_IO_REGS - N_RESERVED_REGS - N_MAX_GENERIC_REGS + N_GENERIC_REGS - N_MANDATORY_REGS; // one mul x const + one add + one add with const
+          regfile_latch_wr_addr = regfile_in_i.addr[LOG_REGS-1:0] + regfile_in_i.addr[LOG_REGS_MC-1:LOG_REGS]*N_IO_REGS - N_RESERVED_REGS - N_MAX_GENERIC_REGS + N_GENERIC_REGS - N_MANDATORY_REGS; // one mul x const + one add + one add with const
+        end
+        else begin
+          regfile_latch_rd_addr = regfile_in_i.addr[LOG_REGS-1:0] - N_RESERVED_REGS - N_MANDATORY_REGS;
+          regfile_latch_wr_addr = regfile_in_i.addr[LOG_REGS-1:0] - N_RESERVED_REGS - N_MANDATORY_REGS;
+        end
       end
-      else begin
-        regfile_latch_rd_addr = regfile_in_i.addr[LOG_REGS-1:0] - N_RESERVED_REGS - N_MANDATORY_REGS;
-        regfile_latch_wr_addr = regfile_in_i.addr[LOG_REGS-1:0] - N_RESERVED_REGS - N_MANDATORY_REGS;
+    end // regfile_latch_addr_multicontext_gen
+    else begin : regfile_latch_addr_singlecontext_gen
+      always_comb
+      begin : regfile_latch_addr_proc
+        if(flags_i.is_contexted == 1'b1) begin
+          regfile_latch_rd_addr = regfile_in_i.addr[LOG_REGS-1:0] + N_RESERVED_REGS - N_MAX_GENERIC_REGS + N_GENERIC_REGS - N_MANDATORY_REGS; // one mul x const + one add + one add with const
+          regfile_latch_wr_addr = regfile_in_i.addr[LOG_REGS-1:0] + N_RESERVED_REGS - N_MAX_GENERIC_REGS + N_GENERIC_REGS - N_MANDATORY_REGS; // one mul x const + one add + one add with const
+        end
+        else begin
+          regfile_latch_rd_addr = regfile_in_i.addr[LOG_REGS-1:0] - N_RESERVED_REGS - N_MANDATORY_REGS;
+          regfile_latch_wr_addr = regfile_in_i.addr[LOG_REGS-1:0] - N_RESERVED_REGS - N_MANDATORY_REGS;
+        end
       end
-    end
+    end // regfile_latch_addr_singlecontext_gen
+
     assign regfile_latch_be    = regfile_in_i.be;
     assign regfile_latch_wdata = regfile_in_i.wdata;
   endgenerate
@@ -239,7 +256,7 @@ module hwpe_ctrl_regfile
         offload_job_id_incr <= 1'b0;
       end
     end
-    else 
+    else
       offload_job_id_incr <= 1'b0;
   end
 
@@ -358,7 +375,7 @@ module hwpe_ctrl_regfile
   assign reg_file.hwpe_params = regfile_mem[flags_i.running_context][N_MANDATORY_REGS+N_RESERVED_REGS+N_MAX_GENERIC_REGS+N_IO_REGS-1:N_MANDATORY_REGS+N_RESERVED_REGS+N_MAX_GENERIC_REGS];
 
   generate
-    if(N_GENERIC_REGS>0) 
+    if(N_GENERIC_REGS>0)
       assign reg_file.generic_params = regfile_mem_generic[N_MANDATORY_REGS+N_RESERVED_REGS+N_GENERIC_REGS-1:N_MANDATORY_REGS+N_RESERVED_REGS];
     else
       assign reg_file.generic_params = 'b0;
