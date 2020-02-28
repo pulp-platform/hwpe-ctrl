@@ -45,7 +45,7 @@ module hwpe_ctrl_uloop
 
   logic [2:0]                         curr_op,   next_op;
   logic [$clog2(LENGTH)-1:0]          curr_addr, next_addr;
-  logic [$clog2(NB_LOOPS)-1:0]        curr_loop, next_loop;
+  logic [$clog2(NB_LOOPS)-1:0]        curr_loop, next_loop, out_loop;
   logic [NB_LOOPS-1:0][CNT_WIDTH-1:0] curr_idx,  next_idx;
 
   logic [NB_REG-1:0]          [REG_WIDTH-1:0] registers, next_registers;
@@ -243,6 +243,17 @@ module hwpe_ctrl_uloop
 
   endgenerate
 
+  // save executed loop for output flags
+  always_ff @(posedge clk_i or negedge rst_ni)
+  begin
+    if(~rst_ni)
+      out_loop <= '0;
+    else if(clear_i)
+      out_loop <= '0;
+    else if(exec_int)
+      out_loop <= curr_loop;
+  end
+
   generate
 
     if(SHADOWED) begin: shadowed_gen
@@ -291,12 +302,20 @@ module hwpe_ctrl_uloop
         flags_o = shadow_flags_rd;
         flags_o.valid = out_valid;
         flags_o.ready = shadow_flags_wr.valid;
+        flags_o.loop  = out_loop;
       end
 
     end // shadowed_gen
     else begin: no_shadowed_gen
+
       assign enable_int = ctrl_i.enable;
-      assign flags_o    = flags_int;
+
+      always_comb
+      begin
+        flags_o = flags_int;
+        flags_o.loop = out_loop;
+      end
+
     end // no_shadowed_gen
 
   endgenerate
