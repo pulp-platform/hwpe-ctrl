@@ -174,7 +174,7 @@ module hwpe_ctrl_uloop
     // end of the loops
     else begin
 `ifndef SYNTHESIS
-      str_enum = TERMINATE;
+      str_enum = NULL;
 `endif
       next_loop = '0;
       next_addr = '0;
