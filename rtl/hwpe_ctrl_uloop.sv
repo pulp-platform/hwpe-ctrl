@@ -29,7 +29,7 @@ module hwpe_ctrl_uloop
   parameter int unsigned REG_WIDTH     = hwpe_ctrl_package::ULOOP_REG_WIDTH,
   parameter int unsigned CNT_WIDTH     = hwpe_ctrl_package::ULOOP_CNT_WIDTH,
   parameter int unsigned SHADOWED      = hwpe_ctrl_package::ULOOP_SHADOWED,
-  parameter int unsigned DEBUG_DISPLAY = 0,
+  parameter int unsigned DEBUG_DISPLAY = 0
 )
 (
   // global signals
