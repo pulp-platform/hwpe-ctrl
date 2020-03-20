@@ -22,13 +22,14 @@ import hwpe_ctrl_package::*;
 
 module hwpe_ctrl_uloop
 #(
-  parameter int unsigned LENGTH    = hwpe_ctrl_package::ULOOP_NB_LOOPS,
-  parameter int unsigned NB_LOOPS  = hwpe_ctrl_package::ULOOP_LENGTH,
-  parameter int unsigned NB_RO_REG = hwpe_ctrl_package::ULOOP_NB_RO_REG,
-  parameter int unsigned NB_REG    = hwpe_ctrl_package::ULOOP_NB_REG,
-  parameter int unsigned REG_WIDTH = hwpe_ctrl_package::ULOOP_REG_WIDTH,
-  parameter int unsigned CNT_WIDTH = hwpe_ctrl_package::ULOOP_CNT_WIDTH,
-  parameter int unsigned SHADOWED  = hwpe_ctrl_package::ULOOP_SHADOWED
+  parameter int unsigned LENGTH        = hwpe_ctrl_package::ULOOP_NB_LOOPS,
+  parameter int unsigned NB_LOOPS      = hwpe_ctrl_package::ULOOP_LENGTH,
+  parameter int unsigned NB_RO_REG     = hwpe_ctrl_package::ULOOP_NB_RO_REG,
+  parameter int unsigned NB_REG        = hwpe_ctrl_package::ULOOP_NB_REG,
+  parameter int unsigned REG_WIDTH     = hwpe_ctrl_package::ULOOP_REG_WIDTH,
+  parameter int unsigned CNT_WIDTH     = hwpe_ctrl_package::ULOOP_CNT_WIDTH,
+  parameter int unsigned SHADOWED      = hwpe_ctrl_package::ULOOP_SHADOWED,
+  parameter int unsigned DEBUG_DISPLAY = 0,
 )
 (
   // global signals
@@ -94,23 +95,27 @@ module hwpe_ctrl_uloop
 `ifndef SYNTHESIS
   enum { UPDATE, ITERATE_GOTO0, ITERATE, GOTO, TERMINATE, NULL } str_enum;
 
-  always_ff @(posedge clk_i or negedge rst_ni)
-  begin
-    if(rst_ni) begin
-      if(enable_int) begin
-        if (str_enum == UPDATE)
-          $display("@%d [%d, %d, %d, %d, %d, %d]%s", curr_addr, curr_idx[5], curr_idx[4], curr_idx[3], curr_idx[2], curr_idx[1], curr_idx[0], " UPDATE CURRENT LOOP                      ");
-        else if(str_enum == ITERATE_GOTO0)
-          $display("@%d [%d, %d, %d, %d, %d, %d]%s", curr_addr, curr_idx[5], curr_idx[4], curr_idx[3], curr_idx[2], curr_idx[1], curr_idx[0], " ITERATE CURRENT LOOP AND GOTO LOOP 0     ");
-        else if(str_enum == ITERATE)
-          $display("@%d [%d, %d, %d, %d, %d, %d]%s", curr_addr, curr_idx[5], curr_idx[4], curr_idx[3], curr_idx[2], curr_idx[1], curr_idx[0], " ITERATE CURRENT LOOP                     ");
-        else if(str_enum == ITERATE)
-          $display("@%d [%d, %d, %d, %d, %d, %d]%s", curr_addr, curr_idx[5], curr_idx[4], curr_idx[3], curr_idx[2], curr_idx[1], curr_idx[0], " GOTO NEXT LOOP                           ");
-        else if(str_enum == TERMINATE)
-          $display("@%d [%d, %d, %d, %d, %d, %d]%s", curr_addr, curr_idx[5], curr_idx[4], curr_idx[3], curr_idx[2], curr_idx[1], curr_idx[0], " TERMINATE                                ");
+  generate
+    if(DEBUG_DISPLAY) begin : debug_display
+      always_ff @(posedge clk_i or negedge rst_ni)
+      begin
+        if(rst_ni) begin
+          if(enable_int) begin
+            if (str_enum == UPDATE)
+              $display("@%d [%d, %d, %d, %d, %d, %d]%s", curr_addr, curr_idx[5], curr_idx[4], curr_idx[3], curr_idx[2], curr_idx[1], curr_idx[0], " UPDATE CURRENT LOOP                      ");
+            else if(str_enum == ITERATE_GOTO0)
+              $display("@%d [%d, %d, %d, %d, %d, %d]%s", curr_addr, curr_idx[5], curr_idx[4], curr_idx[3], curr_idx[2], curr_idx[1], curr_idx[0], " ITERATE CURRENT LOOP AND GOTO LOOP 0     ");
+            else if(str_enum == ITERATE)
+              $display("@%d [%d, %d, %d, %d, %d, %d]%s", curr_addr, curr_idx[5], curr_idx[4], curr_idx[3], curr_idx[2], curr_idx[1], curr_idx[0], " ITERATE CURRENT LOOP                     ");
+            else if(str_enum == ITERATE)
+              $display("@%d [%d, %d, %d, %d, %d, %d]%s", curr_addr, curr_idx[5], curr_idx[4], curr_idx[3], curr_idx[2], curr_idx[1], curr_idx[0], " GOTO NEXT LOOP                           ");
+            else if(str_enum == TERMINATE)
+              $display("@%d [%d, %d, %d, %d, %d, %d]%s", curr_addr, curr_idx[5], curr_idx[4], curr_idx[3], curr_idx[2], curr_idx[1], curr_idx[0], " TERMINATE                                ");
+          end
+        end
       end
     end
-  end
+  endgenerate
 `endif
 
   always_comb
