@@ -337,6 +337,7 @@ module hwpe_ctrl_regfile
     for (i=0; i<N_CONTEXT; i++)
     begin
 
+      // FIXME: this is not behaving as expected in 1-context mode
       always_ff @(posedge clk_i or negedge rst_ni)
       begin : write_mandatory_proc_byte
         if (rst_ni == 0) begin
