@@ -44,7 +44,7 @@ module hwpe_ctrl_uloop
   input  logic [NB_RO_REG-1:0][REG_WIDTH-1:0] registers_read_i
 );
 
-  logic [2:0]                         curr_op,   next_op;
+  logic [3:0]                         curr_op,   next_op;
   logic [$clog2(LENGTH)-1:0]          curr_addr, next_addr;
   logic [$clog2(NB_LOOPS)-1:0]        curr_loop, next_loop, out_loop;
   logic [NB_LOOPS-1:0][CNT_WIDTH-1:0] curr_idx,  next_idx;

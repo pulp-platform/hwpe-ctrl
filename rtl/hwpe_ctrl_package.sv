@@ -38,7 +38,7 @@ package hwpe_ctrl_package;
 
   parameter int unsigned ULOOP_MAX_NB_LOOPS  = 6;
   parameter int unsigned ULOOP_MAX_LENGTH    = 32;
-  parameter int unsigned ULOOP_MAX_NB_REG    = 8;
+  parameter int unsigned ULOOP_MAX_NB_REG    = 9;
   parameter int unsigned ULOOP_MAX_NB_RO_REG = 32;
   parameter int unsigned ULOOP_MAX_REG_WIDTH = 32;
   parameter int unsigned ULOOP_MAX_CNT_WIDTH = 12;
@@ -118,7 +118,7 @@ package hwpe_ctrl_package;
 
   typedef struct packed {
     logic [4:0] uloop_addr;
-    logic [2:0] nb_ops;
+    logic [3:0] nb_ops;
   } uloop_loops_t;
 
   typedef struct packed {
