@@ -242,9 +242,16 @@ module hwpe_ctrl_uloop
     for(genvar i=0; i<NB_REG; i++) begin : flags_reg_assign
       assign flags_int.offs[i] = registers[i];
     end
+    for(genvar i=NB_REG; i<hwpe_ctrl_package::ULOOP_MAX_NB_REG; i++) begin : flags_reg_assign_rem
+      assign flags_int.offs[i] = '0;
+    end
     for(genvar i=0; i<NB_LOOPS; i++) begin : flags_idx_assign
       assign flags_int.idx [i] = curr_idx[i];
     end
+    for(genvar i=NB_LOOPS; i<hwpe_ctrl_package::ULOOP_MAX_NB_LOOPS; i++) begin : flags_idx_assign_rem
+      assign flags_int.idx [i] = '0;
+    end
+    assign flags_int.loop = '0;
 
   endgenerate
 
@@ -267,7 +274,7 @@ module hwpe_ctrl_uloop
       logic out_valid;
 
       // when the shadow register is not valid, enable the uloop
-      assign enable_int = ~shadow_flags_wr.valid & ~flags_valid & ~clear_i;
+      assign enable_int = ~shadow_flags_wr.valid & ~flags_valid & ~flags_int.done & ~clear_i;
 
       // the shadow register is updated when flags_valid is 1'b1
       always_ff @(posedge clk_i or negedge rst_ni)
@@ -276,7 +283,7 @@ module hwpe_ctrl_uloop
           shadow_flags_wr <= '0;
         else if(clear_i | ctrl_i.enable)
           shadow_flags_wr <= '0;
-        else if (flags_int.valid)
+        else if (flags_int.valid | flags_int.done)
           shadow_flags_wr <= flags_int;
       end
 
