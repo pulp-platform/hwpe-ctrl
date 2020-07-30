@@ -48,6 +48,7 @@ module hwpe_ctrl_uloop
   logic [$clog2(LENGTH)-1:0]          curr_addr, next_addr;
   logic [$clog2(NB_LOOPS)-1:0]        curr_loop, next_loop, out_loop;
   logic [NB_LOOPS-1:0][CNT_WIDTH-1:0] curr_idx,  next_idx;
+  logic [NB_LOOPS-1:0]                idx_update_d, idx_update_q;
 
   logic [NB_REG-1:0]          [REG_WIDTH-1:0] registers, next_registers;
   logic [NB_RO_REG+NB_REG-1:0][REG_WIDTH-1:0] registers_read;
@@ -250,6 +251,24 @@ module hwpe_ctrl_uloop
     end
     for(genvar i=NB_LOOPS; i<hwpe_ctrl_package::ULOOP_MAX_NB_LOOPS; i++) begin : flags_idx_assign_rem
       assign flags_int.idx [i] = '0;
+    end
+    for(genvar i=0; i<NB_LOOPS; i++) begin : flags_idx_update_assign
+      assign idx_update_d[i] = (curr_idx[i] != next_idx[i]) ? 1'b1 : 1'b0;
+      always_ff @(posedge clk_i or negedge rst_ni) begin
+        if(~rst_ni) begin
+          idx_update_q[i] <= '0;
+        end
+        else if(clear_i | ctrl_i.clear) begin
+          idx_update_q[i] <= '0;
+        end
+        else if(enable_int) begin
+          idx_update_q[i] <= idx_update_d[i];
+        end
+      end
+      assign flags_int.idx_update [i] = idx_update_q[i];
+    end
+    for(genvar i=NB_LOOPS; i<hwpe_ctrl_package::ULOOP_MAX_NB_LOOPS; i++) begin : flags_idx_update_assign_rem
+      assign flags_int.idx_update [i] = '0;
     end
     assign flags_int.loop = '0;
 

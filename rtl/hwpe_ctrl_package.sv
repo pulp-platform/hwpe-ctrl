@@ -113,6 +113,7 @@ package hwpe_ctrl_package;
     logic                                                   ready;
     logic [ULOOP_MAX_NB_REG-1:0]  [31:0]                    offs;
     logic [ULOOP_MAX_NB_LOOPS-1:0][ULOOP_MAX_CNT_WIDTH-1:0] idx;
+    logic [ULOOP_MAX_NB_LOOPS-1:0]                          idx_update;
     logic [$clog2(ULOOP_MAX_NB_LOOPS)-1:0]                  loop;
   } flags_uloop_t;
 
