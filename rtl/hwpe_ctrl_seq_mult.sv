@@ -31,28 +31,39 @@ module hwpe_ctrl_seq_mult
   input  logic [AW-1:0]    a_i,
   input  logic [BW-1:0]    b_i,
   output logic             valid_o,
+  output logic             ready_o,
   output logic [AW+BW-1:0] prod_o
 );
 
   logic [$clog2(AW+1)-1:0] cnt;
   logic [AW+BW-1:0] shifted;
+  logic valid_q, ready_q;
 
   always_ff @(posedge clk_i or negedge rst_ni)
   begin : counter
     if(~rst_ni) begin
       cnt <= '0;
+      valid_q <= '0;
+      ready_q <= 1'b1;
     end
     else if(clear_i) begin
       cnt <= '0;
+      valid_q <= '0;
+      ready_q <= 1'b1;
     end
     else if(cnt == AW - 1) begin
       cnt <= 0;
+      valid_q <= 1'b1;
+      ready_q <= 1'b1;
     end
     else if((start_i==1'b1) || (cnt>0)) begin
       cnt <= cnt + 1;
+      valid_q <= 1'b0;
+      ready_q <= 1'b0;
     end
   end
-  assign valid_o = (cnt == 0) ? 1'b1 : 1'b0;
+  assign valid_o = valid_q;
+  assign ready_o = ready_q;
 
   assign shifted = ({BW{a_i[cnt]}} & b_i) << cnt;
 
