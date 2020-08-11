@@ -22,8 +22,8 @@ import hwpe_ctrl_package::*;
 
 module hwpe_ctrl_uloop
 #(
-  parameter int unsigned LENGTH        = hwpe_ctrl_package::ULOOP_MAX_NB_LOOPS,
-  parameter int unsigned NB_LOOPS      = hwpe_ctrl_package::ULOOP_MAX_LENGTH,
+  parameter int unsigned LENGTH        = hwpe_ctrl_package::ULOOP_MAX_LENGTH,
+  parameter int unsigned NB_LOOPS      = hwpe_ctrl_package::ULOOP_MAX_NB_LOOPS,
   parameter int unsigned NB_RO_REG     = hwpe_ctrl_package::ULOOP_MAX_NB_RO_REG,
   parameter int unsigned NB_REG        = hwpe_ctrl_package::ULOOP_MAX_NB_REG,
   parameter int unsigned REG_WIDTH     = hwpe_ctrl_package::ULOOP_MAX_REG_WIDTH,
