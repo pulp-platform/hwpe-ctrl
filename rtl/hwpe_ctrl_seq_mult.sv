@@ -30,6 +30,7 @@ module hwpe_ctrl_seq_mult
   input  logic             start_i,
   input  logic [AW-1:0]    a_i,
   input  logic [BW-1:0]    b_i,
+  input  logic             invert_i,
   output logic             valid_o,
   output logic             ready_o,
   output logic [AW+BW-1:0] prod_o
@@ -51,7 +52,7 @@ module hwpe_ctrl_seq_mult
       valid_q <= '0;
       ready_q <= 1'b1;
     end
-    else if(cnt == AW - 1) begin
+    else if((~invert_i && cnt == AW - 1) || (invert_i && cnt == AW)) begin
       cnt <= 0;
       valid_q <= 1'b1;
       ready_q <= 1'b1;
@@ -65,7 +66,7 @@ module hwpe_ctrl_seq_mult
   assign valid_o = valid_q;
   assign ready_o = ready_q;
 
-  assign shifted = ({BW{a_i[cnt]}} & b_i) << cnt;
+  assign shifted = cnt==AW ? 1 : ({BW{a_i[cnt]}} & b_i) << cnt;
 
   always_ff @(posedge clk_i or negedge rst_ni)
   begin : product
@@ -77,6 +78,9 @@ module hwpe_ctrl_seq_mult
     end
     else if (start_i) begin
       prod_o <= shifted;
+    end
+    else if(cnt==AW) begin
+      prod_o <= ~prod_o + shifted;
     end
     else if(cnt>0) begin
       prod_o <= prod_o + shifted;
