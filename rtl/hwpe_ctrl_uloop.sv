@@ -293,7 +293,7 @@ module hwpe_ctrl_uloop
       logic out_valid;
 
       // when the shadow register is not valid, enable the uloop
-      assign enable_int = ~shadow_flags_wr.valid & ~flags_valid & ~flags_int.done & ~clear_i;
+      assign enable_int = ~shadow_flags_wr.valid & ~flags_valid & ~flags_int.done & ~clear_i & ctrl_i.ready;
 
       // the shadow register is updated when flags_valid is 1'b1
       always_ff @(posedge clk_i or negedge rst_ni)

@@ -104,6 +104,7 @@ package hwpe_ctrl_package;
 
   typedef struct packed {
     logic enable;
+    logic ready;
     logic clear;
   } ctrl_uloop_t;
 
