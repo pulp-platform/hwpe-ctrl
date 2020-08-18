@@ -334,41 +334,62 @@ module hwpe_ctrl_regfile
 
   generate
 
-    for (i=0; i<N_CONTEXT; i++)
-    begin
+    if(N_CONTEXT > 1) begin : multi_context_gen
+      for (i=0; i<N_CONTEXT; i++)
+      begin
 
-      // FIXME: this is not behaving as expected in 1-context mode
-      always_ff @(posedge clk_i or negedge rst_ni)
-      begin : write_mandatory_proc_byte
-        if (rst_ni == 0) begin
-          regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 0;
-        end
-        else if (clear_i==1'b1) begin
-          regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 0;
-        end
-        else if (flags_i.is_trigger | flags_i.true_done == 1'b1) begin
-          if (flags_i.pointer_context==i) begin
-            if (flags_i.is_trigger==1) begin
-              regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 8'h01;
+        always_ff @(posedge clk_i or negedge rst_ni)
+        begin : write_mandatory_proc_byte
+          if (rst_ni == 0) begin
+            regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 0;
+          end
+          else if (clear_i==1'b1) begin
+            regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 0;
+          end
+          else if (flags_i.is_trigger | flags_i.true_done == 1'b1) begin
+            if (flags_i.pointer_context==i) begin
+              if (flags_i.is_trigger==1) begin
+                regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 8'h01;
+              end
+              else if (flags_i.true_done==1 && flags_i.running_context==flags_i.pointer_context) begin
+                regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 8'h00;
+              end
             end
-            else if (flags_i.true_done==1 && flags_i.running_context==flags_i.pointer_context) begin
-              regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 8'h00;
+            else if (flags_i.running_context==i) begin
+              if (flags_i.true_done==1) begin
+                regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 8'h00;
+              end
             end
           end
-          else if (flags_i.running_context==i) begin
-            if (flags_i.true_done==1) begin
-              regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] <= 8'h00;
-            end
-          end
+        end
+
+      end
+
+      if(N_CONTEXT<4) begin
+        for(i=N_CONTEXT; i<4; i++) begin
+          assign regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] = 'b0;
         end
       end
 
     end
+    else begin : single_context_gen
 
-    if(N_CONTEXT<4) begin
-      for(i=N_CONTEXT; i<4; i++) begin
-         assign regfile_mem_mandatory[REGFILE_MANDATORY_STATUS][(i+1)*8-1:i*8] = 'b0;
+      always_ff @(posedge clk_i or negedge rst_ni)
+      begin : write_mandatory_proc_byte
+        if (rst_ni == 1'b0) begin
+          regfile_mem_mandatory[REGFILE_MANDATORY_STATUS] <= 0;
+        end
+        else if (clear_i==1'b1) begin
+          regfile_mem_mandatory[REGFILE_MANDATORY_STATUS] <= 0;
+        end
+        else if (flags_i.is_trigger==1'b1) begin
+          regfile_mem_mandatory[REGFILE_MANDATORY_STATUS] <= 1;
+        end
+        else if (flags_i.true_done==1'b1) begin
+          regfile_mem_mandatory[REGFILE_MANDATORY_STATUS] <= 0;
+        end
       end
+
     end
 
   endgenerate

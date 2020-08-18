@@ -75,29 +75,30 @@ module hwpe_ctrl_slave
     end
   end
 
-  // offloading core queue for evt generation
-  always_ff @(posedge clk_i or negedge rst_ni)
-  begin : offloading_core_proc
-    if(rst_ni == 1'b0)
-    begin
-      offloading_core <= '0;
-    end
-    else
-    begin
-        if (regfile_flags.is_trigger == 1)
-        begin
-          for(int i=0; i<N_CORES; i++)
-            if (cfg.id[i] == 1'b1)
-              offloading_core[pointer_context] <= i;
-        end
-    end
-  end
-
   assign flags_o.done = regfile_flags.true_done;
 
   generate
 
-    if(N_CONTEXT>1) begin
+    if(N_CONTEXT>1) begin : multi_context_gen
+
+      // offloading core queue for evt generation
+      always_ff @(posedge clk_i or negedge rst_ni)
+      begin : offloading_core_proc
+        if(rst_ni == 1'b0)
+        begin
+          offloading_core <= '0;
+        end
+        else
+        begin
+            if (regfile_flags.is_trigger == 1)
+            begin
+              for(int i=0; i<N_CORES; i++)
+                if (cfg.id[i] == 1'b1)
+                  offloading_core[pointer_context] <= i;
+            end
+        end
+      end
+      
       // Current context
       always_ff @(posedge clk_i or negedge rst_ni)
       begin : pointer_context_proc
@@ -140,7 +141,26 @@ module hwpe_ctrl_slave
       assign regfile_flags.full_context = (counter_pending == N_CONTEXT) ? 1 : 0;  // All contexts are busy
 
     end
-    else begin
+    else begin : single_context_gen
+
+      // offloading core queue for evt generation
+      always_ff @(posedge clk_i or negedge rst_ni)
+      begin : offloading_core_proc
+        if(rst_ni == 1'b0)
+        begin
+          offloading_core <= '0;
+        end
+        else
+        begin
+            if (regfile_flags.is_trigger == 1)
+            begin
+              for(int i=0; i<N_CORES; i++)
+                if (cfg.id[i] == 1'b1)
+                  offloading_core[0] <= i;
+            end
+        end
+      end
+
       assign pointer_context    = regfile_flags.is_trigger;
       assign running_context    = 'b0;
       assign counter_pending    = (flags_o.is_working==1'b1) ? 1 : 'b0;
@@ -164,7 +184,7 @@ module hwpe_ctrl_slave
   generate
     logic [LOG_REGS_MC-LOG_REGS-1:0] context_addr;
 
-    if(N_CONTEXT>1) begin : multi_context_gen
+    if(N_CONTEXT>1) begin : multi_context_addr_gen
     assign context_addr = cfg.add[LOG_REGS_MC+2:LOG_REGS+2] - 1;
       always_comb
       begin
@@ -179,7 +199,7 @@ module hwpe_ctrl_slave
         end
       end
     end
-    else begin : single_context_gen
+    else begin : single_context_addr_gen
       assign context_addr = '0;
       assign regfile_in.addr = cfg.add[LOG_REGS+2-1:2];
     end
@@ -397,22 +417,29 @@ module hwpe_ctrl_slave
     end
   end
 
+  logic [ID_WIDTH-1:0] cfg_id_d, cfg_id_q;
+  logic cfg_req_d, cfg_req_q;
+
   always_ff @(posedge clk_i or negedge rst_ni)
   begin
     if(rst_ni == 1'b0)
-      cfg.r_id <= '0;
+      cfg_id_q <= '0;
     else if(cfg.req == 1'b1)
-      cfg.r_id <= cfg.id;
+      cfg_id_q <= cfg_id_d;
   end
 
   always_ff @(posedge clk_i or negedge rst_ni)
   begin : cfg_r_valid_proc
     if(rst_ni == 1'b0)
-      cfg.r_valid <= 1'b0;
+      cfg_req_q <= 1'b0;
     else
-      cfg.r_valid <= cfg.req;
+      cfg_req_q <= cfg_req_d;
   end
 
+  assign cfg_id_d = cfg.id;
+  assign cfg_req_d = cfg.req;
+  assign cfg.r_id = cfg_id_q;
+  assign cfg.r_valid = cfg_req_q;
   assign cfg.gnt = '1;
 
 endmodule
