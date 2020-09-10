@@ -45,8 +45,8 @@ module hwpe_ctrl_slave
   localparam int unsigned LOG_REGS            = $clog2(N_REGISTERS);
   localparam int unsigned LOG_CONTEXT         = N_CONTEXT > 1 ? $clog2(N_CONTEXT) : 1;
   localparam int unsigned LOG_REGS_MC         = LOG_REGS+LOG_CONTEXT;
-  localparam int unsigned N_MAX_IO_REGS       = REGFILE_N_MAX_IO_REGS;
-  localparam int unsigned N_MAX_GENERIC_REGS  = REGFILE_N_MAX_GENERIC_REGS;
+  localparam int unsigned N_MAX_IO_REGS       = 2**$clog2(N_IO_REGS-1);
+  localparam int unsigned N_MAX_GENERIC_REGS  = 2**$clog2(N_GENERIC_REGS-1);
 
   regfile_in_t  regfile_in;
   regfile_out_t regfile_out;

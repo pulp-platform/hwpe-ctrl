@@ -40,8 +40,8 @@ module hwpe_ctrl_regfile
   localparam int unsigned N_REGISTERS         = REGFILE_N_REGISTERS;
   localparam int unsigned N_MANDATORY_REGS    = REGFILE_N_MANDATORY_REGS;
   localparam int unsigned N_RESERVED_REGS     = REGFILE_N_RESERVED_REGS;
-  localparam int unsigned N_MAX_IO_REGS       = REGFILE_N_MAX_IO_REGS;
-  localparam int unsigned N_MAX_GENERIC_REGS  = REGFILE_N_MAX_GENERIC_REGS;
+  localparam int unsigned N_MAX_IO_REGS       = 2**$clog2(N_IO_REGS-1);
+  localparam int unsigned N_MAX_GENERIC_REGS  = 2**$clog2(N_GENERIC_REGS-1);
   localparam int unsigned LOG_REGS            = $clog2(N_REGISTERS);
   localparam int unsigned LOG_REGS_MC         = LOG_REGS+LOG_CONTEXT;
 
