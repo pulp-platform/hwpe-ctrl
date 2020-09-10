@@ -63,6 +63,8 @@ module hwpe_ctrl_slave
 
   logic [3:0] s_enable_after;
   logic [1:0] s_clear;
+  logic [1:0] s_clear_regfile;
+  logic clear_regfile;
 
   always_ff @(posedge clk_i or negedge rst_ni)
   begin
@@ -227,7 +229,7 @@ module hwpe_ctrl_slave
   ) i_regfile (
     .clk_i         ( clk_i         ),
     .rst_ni        ( rst_ni        ),
-    .clear_i       ( clear_o       ),
+    .clear_i       ( clear_regfile ),
     .regfile_in_i  ( regfile_in    ),
     .regfile_out_o ( regfile_out   ),
     .flags_i       ( regfile_flags ),
@@ -402,6 +404,7 @@ module hwpe_ctrl_slave
     end
   end
 
+  // any write to SOFT_CLEAR will trigger clear_o, but not clear_regfile (only when data is '0)
   always_ff @(posedge clk_i or negedge rst_ni)
   begin : soft_clear_proc
     if(rst_ni == 1'b0) begin
@@ -414,6 +417,21 @@ module hwpe_ctrl_slave
       else if (s_clear != '0)
         s_clear <= s_clear + 2'b01;
       clear_o <= |(s_clear);
+    end
+  end
+
+  always_ff @(posedge clk_i or negedge rst_ni)
+  begin : soft_clear_regfile_proc
+    if(rst_ni == 1'b0) begin
+      s_clear_regfile <= '0;
+      clear_regfile <= 1'b0;
+    end
+    else begin
+      if((s_clear_regfile == '0) && ((cfg.req == 1'b1) && (cfg.wen == 1'b0) && (cfg.add[LOG_REGS+2-1:2]) == REGFILE_MANDATORY_SOFTCLEAR && cfg.data=='0))
+        s_clear_regfile <= 2'b01;
+      else if (s_clear_regfile != '0)
+        s_clear_regfile <= s_clear_regfile + 2'b01;
+      clear_regfile <= |(s_clear_regfile);
     end
   end
 
