@@ -73,6 +73,7 @@ package hwpe_ctrl_package;
     logic                                 is_critical;
     logic                                 is_testset;
     logic                                 is_trigger;
+    logic                                 is_commit;
     logic                                 is_working;
     logic [$clog2(REGFILE_N_CONTEXT)-1:0] pointer_context;
     logic [$clog2(REGFILE_N_CONTEXT)-1:0] running_context;
