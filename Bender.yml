@@ -1,0 +1,28 @@
+package:
+  name: hwpe-ctrl
+  authors: 
+    - "Francesco Conti <f.conti@unibo.it>"
+    - "Gianna Paulin <pauling@iis.ee.ethz.ch>"
+    - "Florent Rotenberg <florent.rotenberg@greenwaves-technologies.com>"
+
+dependencies:
+  tech_cells_generic: { git: "git@github.com:pulp-platform/tech_cells_generic.git", version: 0.1.6 }
+
+# vlog_opts: [
+#   +nowarnSVCHK,
+# ]
+
+sources:
+  - include_dirs:
+      - rtl
+    files:
+      - rtl/hwpe_ctrl_package.sv
+      - rtl/hwpe_ctrl_interfaces.sv
+      - rtl/hwpe_ctrl_regfile.sv
+      - rtl/hwpe_ctrl_regfile_latch.sv
+      - rtl/hwpe_ctrl_slave.sv
+      - rtl/hwpe_ctrl_seq_mult.sv
+      - rtl/hwpe_ctrl_ucode.sv
+  - target: rtl
+    files:
+      - tb/tb_hwpe_ctrl_seq_mult.sv
