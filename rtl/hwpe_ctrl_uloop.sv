@@ -18,9 +18,9 @@
  * ones.
  */
 
-import hwpe_ctrl_package::*;
 
 module hwpe_ctrl_uloop
+  import hwpe_ctrl_package::*;
 #(
   parameter int unsigned LENGTH        = hwpe_ctrl_package::ULOOP_MAX_LENGTH,
   parameter int unsigned NB_LOOPS      = hwpe_ctrl_package::ULOOP_MAX_NB_LOOPS,

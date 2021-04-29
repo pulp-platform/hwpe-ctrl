@@ -17,9 +17,9 @@
 timeunit 1ps;
 timeprecision 1ps;
 
-import hwpe_ctrl_package::*;
 
 module tb_hwpe_ctrl_uloop;
+  import hwpe_ctrl_package::*;
 
   // parameters
   parameter int unsigned NB_LOOPS  = hwpe_ctrl_package::ULOOP_NB_LOOPS;
