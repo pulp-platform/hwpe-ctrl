@@ -13,9 +13,9 @@
  * specific language governing permissions and limitations under the License.
  */
 
-import hwpe_ctrl_package::*;
 
 module hwpe_ctrl_regfile
+  import hwpe_ctrl_package::*;
 #(
   parameter int unsigned N_CONTEXT      = REGFILE_N_CONTEXT,
   parameter int unsigned ID_WIDTH       = 16,

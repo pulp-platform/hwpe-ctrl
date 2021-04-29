@@ -13,9 +13,9 @@
  * specific language governing permissions and limitations under the License.
  */
 
-import hwpe_ctrl_package::*;
 
 module hwpe_ctrl_slave
+  import hwpe_ctrl_package::*;
 #(
   parameter int unsigned N_CORES        = 4,
   parameter int unsigned N_CONTEXT      = 2,
