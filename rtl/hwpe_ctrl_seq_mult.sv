@@ -16,9 +16,9 @@
  * be kept stable for AW-1 cycles after the start strobe.
  */
 
-import hwpe_ctrl_package::*;
 
-module hwpe_ctrl_seq_mult 
+module hwpe_ctrl_seq_mult
+  import hwpe_ctrl_package::*;
 #(
   parameter int unsigned AW = 8,
   parameter int unsigned BW = 8
