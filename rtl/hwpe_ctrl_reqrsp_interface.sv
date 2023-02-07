@@ -116,7 +116,7 @@ module hwpe_ctrl_reqrsp_interface
     else if(soft_clear_reg_s) begin
       register_file <= '0;
     end
-    else begin
+    else if(cfg_req_i.q_valid & cfg_req_i.q_write & cfg_rsp_o.q_ready) begin
       register_file[push_cnt_q] <= cfg_req_i.q_data;
     end
   end
@@ -130,7 +130,7 @@ module hwpe_ctrl_reqrsp_interface
     else if(soft_clear_s) begin
       cfg_rsp_q <= '0;
     end
-    else begin
+    else if(cfg_req_i.q_valid | cfg_req_i.p_ready) begin
       cfg_rsp_q <= cfg_rsp_d;
     end
   end
@@ -155,11 +155,11 @@ module hwpe_ctrl_reqrsp_interface
     else if(soft_clear_s) begin
       push_cnt_q <= '0;
     end
-    else if(flags_o.enable) begin
+    else begin
       push_cnt_q <= push_cnt_d;
     end
   end
-  assign push_cnt_d = (cfg_req_i.q_valid & cfg_req_i.q_write) && ctrl_reg_d == HWPE_CTRL_REQRSP_PUSH ? (push_cnt_q == NB_REGISTER-1 ? '0 : push_cnt_q + 1) : push_cnt_d;
+  assign push_cnt_d = (cfg_req_i.q_valid & cfg_req_i.q_write) && ctrl_reg_d == HWPE_CTRL_REQRSP_PUSH ? (push_cnt_q == NB_REGISTER-1 ? '0 : push_cnt_q + 1) : push_cnt_q;
 
   // pull counter
   always_ff @(posedge clk_i or negedge rst_ni)
@@ -170,11 +170,11 @@ module hwpe_ctrl_reqrsp_interface
     else if(soft_clear_s) begin
       pull_cnt_q <= '0;
     end
-    else if(flags_o.enable) begin
+    else begin
       pull_cnt_q <= pull_cnt_d;
     end
   end
-  assign pull_cnt_d = (cfg_req_i.q_valid & ~cfg_req_i.q_write) && ctrl_reg_d == HWPE_CTRL_REQRSP_PULL ? (pull_cnt_q == NB_REGISTER-1 ? '0 : pull_cnt_q + 1) : pull_cnt_d;
+  assign pull_cnt_d = (cfg_req_i.q_valid & ~cfg_req_i.q_write) && ctrl_reg_d == HWPE_CTRL_REQRSP_PULL ? (pull_cnt_q == NB_REGISTER-1 ? '0 : pull_cnt_q + 1) : pull_cnt_q;
 
   // job id counter
   always_ff @(posedge clk_i or negedge rst_ni)
@@ -189,6 +189,7 @@ module hwpe_ctrl_reqrsp_interface
       job_id_q <= job_id_d;
     end
   end
+  assign job_id_d = job_id_q + 1;
   always_ff @(posedge clk_i or negedge rst_ni)
   begin : job_id_update_p
     if(~rst_ni) begin
@@ -208,7 +209,7 @@ module hwpe_ctrl_reqrsp_interface
     if(~rst_ni) begin
       soft_clear_cnt_q <= '0;
     end
-    else if(soft_clear_cnt_q != '0 || (cfg_req_i.q_valid & ~cfg_req_i.q_write) && ctrl_reg_d == HWPE_CTRL_REQRSP_SOFTCLR && cfg_req_i.q_data == '0) begin
+    else if(soft_clear_cnt_q != '0 || ((cfg_req_i.q_valid & cfg_req_i.q_write) && ctrl_reg_d == HWPE_CTRL_REQRSP_SOFTCLR && cfg_req_i.q_data == '0)) begin
       soft_clear_cnt_q <= soft_clear_cnt_d;
     end
   end
@@ -222,7 +223,7 @@ module hwpe_ctrl_reqrsp_interface
     if(~rst_ni) begin
       soft_clear_reg_cnt_q <= '0;
     end
-    else if(soft_clear_reg_cnt_q != '0 || (cfg_req_i.q_valid & ~cfg_req_i.q_write) && ctrl_reg_d == HWPE_CTRL_REQRSP_SOFTCLR && cfg_req_i.q_data != '0) begin
+    else if(soft_clear_reg_cnt_q != '0 || ((cfg_req_i.q_valid & cfg_req_i.q_write) && ctrl_reg_d == HWPE_CTRL_REQRSP_SOFTCLR && cfg_req_i.q_data != '0)) begin
       soft_clear_reg_cnt_q <= soft_clear_reg_cnt_d;
     end
   end
