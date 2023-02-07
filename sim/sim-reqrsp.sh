@@ -1,3 +1,3 @@
 #!/bin/bash
-vsim -work hwpe_ctrl_lib vopt_tb_hwpe_ctrl_reqrsp_interface
+vsim -work hwpe_ctrl_lib vopt_tb_hwpe_ctrl_reqrsp_target
 

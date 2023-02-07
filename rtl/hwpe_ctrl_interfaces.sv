@@ -42,3 +42,36 @@ interface hwpe_ctrl_intf_periph
   );
 
 endinterface // hwpe_ctrl_intf_periph
+
+interface hwpe_ctrl_intf_reqrsp (
+  input logic clk
+);
+
+  parameter int unsigned AW = -1;
+  parameter int unsigned DW = -1;
+
+  // Q (request) channel
+  logic [AW-1:0]   q_addr;
+  logic            q_write;
+  logic [DW/8-1:0] q_strb;
+  logic [DW-1:0]   q_data;
+  // Q (request) handshake
+  logic            q_valid;
+  logic            q_ready;
+
+  // P (response) channel
+  logic [DW-1:0]   p_data;
+  // P (response) handshake
+  logic            p_valid;
+  logic            p_ready;
+
+  modport initiator (
+    output q_addr, q_write, q_strb, q_data, q_valid, p_ready,
+    input  p_data, p_valid, q_ready
+  );
+  modport target (
+    input  q_addr, q_write, q_strb, q_data, q_valid, p_ready,
+    output p_data, p_valid, q_ready
+  );
+
+endinterface // hwpe_ctrl_intf_reqrsp
