@@ -26,5 +26,5 @@ sources:
       - rtl/hwpe_ctrl_regfile.sv
       # Level 4
       - rtl/hwpe_ctrl_slave.sv
-      - rtl/hwpe_ctrl_reqrsp_interface.sv
+      - rtl/hwpe_ctrl_reqrsp_target.sv
 

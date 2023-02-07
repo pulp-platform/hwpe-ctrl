@@ -16,7 +16,7 @@
 timeunit 1ns;
 timeprecision 1ps;
 
-module tb_hwpe_ctrl_reqrsp_interface
+module tb_hwpe_ctrl_reqrsp_target
   import hwpe_ctrl_package::*;;
 
   // ATI timing parameters.
@@ -28,18 +28,18 @@ module tb_hwpe_ctrl_reqrsp_interface
   logic rst_ni = '1;
   logic clear_o;
     
-  typedef struct packed {
-    logic [31:0] q_addr;
-    logic        q_write;
-    logic [63:0] q_data;
-    logic        q_valid;
-    logic        p_ready;
-  } reqrsp_req_t;
-  typedef struct packed {
-    logic [63:0] p_data;
-    logic        p_valid;
-    logic        q_ready;
-  } reqrsp_rsp_t;
+  // typedef struct packed {
+  //   logic [31:0] q_addr;
+  //   logic        q_write;
+  //   logic [63:0] q_data;
+  //   logic        q_valid;
+  //   logic        p_ready;
+  // } reqrsp_req_t;
+  // typedef struct packed {
+  //   logic [63:0] p_data;
+  //   logic        p_valid;
+  //   logic        q_ready;
+  // } reqrsp_rsp_t;
 
   parameter int unsigned HWPE_CTRL_REQRSP_TRIGGER = 0;
   parameter int unsigned HWPE_CTRL_REQRSP_STATUS  = 1;
@@ -48,56 +48,17 @@ module tb_hwpe_ctrl_reqrsp_interface
   parameter int unsigned HWPE_CTRL_REQRSP_PUSH    = 4;
   parameter int unsigned HWPE_CTRL_REQRSP_PULL    = 5;
 
-  reqrsp_req_t cfg_req_i;
-  reqrsp_rsp_t cfg_rsp_o;
+  hwpe_ctrl_intf_reqrsp #(
+    .AW (32),
+    .DW (64)
+  ) cfg (
+    .clk ( clk_i )
+  );
+  // reqrsp_req_t cfg_req_i;
+  // reqrsp_rsp_t cfg_rsp_o;
   ctrl_slave_t   ctrl_i;
   flags_slave_t  flags_o;
   ctrl_regfile_t reg_file;
-
-  task reqrsp_reset();
-    #(TA);
-    cfg_req_i.q_addr = '0;
-    cfg_req_i.q_data = '0;
-    cfg_req_i.q_write = '0;
-    cfg_req_i.q_valid = '0;
-    cfg_req_i.p_ready = '0;
-    #(TCP-TA);
-  endtask
-
-  task reqrsp_write(
-    input logic [31:0] w_add,
-    input logic [63:0] w_data
-  );
-    #(TA);
-    cfg_req_i.q_addr = w_add;
-    cfg_req_i.q_data = w_data;
-    cfg_req_i.q_write = 1'b1;
-    cfg_req_i.q_valid = 1'b1;
-    while (cfg_rsp_o.q_ready != 1'b1)
-      #(TCP);
-    #(TCP);
-    cfg_req_i.q_valid = 1'b0;
-    #(TCP-TA);
-  endtask
-
-  task reqrsp_read(
-    input logic [31:0] r_add,
-    output logic [63:0] rdata
-  );
-    #(TA);
-    cfg_req_i.q_addr = r_add;
-    cfg_req_i.q_write = 1'b0;
-    cfg_req_i.q_valid = 1'b1;
-    cfg_req_i.p_ready = 1'b1;
-    while (cfg_rsp_o.q_ready != 1'b1)
-      #(TCP);
-    #(TCP-TA);
-    rdata = cfg_rsp_o.p_data;
-    #(TA);
-    cfg_req_i.q_valid = 1'b0;
-    cfg_req_i.p_ready = 1'b0;
-    #(TCP-TA);
-  endtask
 
   // Performs one entire clock cycle.
   task cycle;
@@ -120,22 +81,77 @@ module tb_hwpe_ctrl_reqrsp_interface
     end
   end
 
+  task reqrsp_reset();
+    #(TA);
+    cfg.q_addr = '0;
+    cfg.q_data = '0;
+    cfg.q_write = '0;
+    cfg.q_valid = '0;
+    cfg.p_ready = '0;
+    cfg.q_strb = '0;
+    #(TCP-TA);
+  endtask
+
+  task reqrsp_write(
+    input logic [31:0] w_add,
+    input logic [63:0] w_data
+  );
+    #(TA);
+    cfg.q_addr = w_add;
+    cfg.q_data = w_data;
+    cfg.q_write = 1'b1;
+    cfg.q_valid = 1'b1;
+    cfg.q_strb = '1;
+    while (cfg.q_ready != 1'b1)
+      #(TCP);
+    #(TCP);
+    cfg.q_valid = 1'b0;
+    cfg.q_strb = '0;
+    #(TCP-TA);
+  endtask
+
+  task reqrsp_read(
+    input  logic [31:0] r_add,
+    output logic [63:0] rdata,
+    input  int          ready_delay
+  );
+    #(TA);
+    cfg.q_addr = r_add;
+    cfg.q_write = 1'b0;
+    cfg.q_valid = 1'b1;
+    while (cfg.q_ready != 1'b1)
+      #(TCP);
+    #(TCP);
+    cfg.q_valid = 1'b0;
+    for(int i=0; i<ready_delay; i+=1)
+      #(TCP);
+    cfg.p_ready = 1'b1;
+    while (cfg.p_valid != 1'b1)
+      #(TCP);
+    #(TCP-TA);
+    rdata = cfg.p_data;
+    #(TA);
+    cfg.p_ready = 1'b0;
+    #(TCP-TA);
+  endtask
+
+
   logic [63:0] rdata;
   initial begin
     reqrsp_reset();
     ctrl_i = '0;
     #(50*TCP);
-    // SOFT CLEAR (registers)
+    // SOFT CLEAR (all but regfile)
     reqrsp_write({HWPE_CTRL_REQRSP_SOFTCLR, 2'b0}, 1);
     #(5*TCP);
     // SOFT CLEAR (all)
     reqrsp_write({HWPE_CTRL_REQRSP_SOFTCLR, 2'b0}, 0);
     #(5*TCP);
     // STATUS (must be 0)
-    reqrsp_read({HWPE_CTRL_REQRSP_STATUS, 2'b0}, rdata);
+    reqrsp_read({HWPE_CTRL_REQRSP_STATUS, 2'b0}, rdata, 0);
     #(5*TCP);
     // JOBID (must be 0)
-    reqrsp_read({HWPE_CTRL_REQRSP_JOBID, 2'b0}, rdata);
+    reqrsp_read({HWPE_CTRL_REQRSP_JOBID, 2'b0}, rdata, 0);
     #(5*TCP);
     // PUSH x 3
     reqrsp_write({HWPE_CTRL_REQRSP_PUSH, 2'b0}, 64'h12345678_9ABCDEF0);
@@ -145,43 +161,40 @@ module tb_hwpe_ctrl_reqrsp_interface
     reqrsp_write({HWPE_CTRL_REQRSP_PUSH, 2'b0}, 64'h01234567_FEDCBA98);
     #(5*TCP);
     // PULL x 3
-    reqrsp_read({HWPE_CTRL_REQRSP_PULL, 2'b0}, rdata);
+    reqrsp_read({HWPE_CTRL_REQRSP_PULL, 2'b0}, rdata, 2);
     #(TCP);
-    reqrsp_read({HWPE_CTRL_REQRSP_PULL, 2'b0}, rdata);
+    reqrsp_read({HWPE_CTRL_REQRSP_PULL, 2'b0}, rdata, 2);
     #(TCP);
-    reqrsp_read({HWPE_CTRL_REQRSP_PULL, 2'b0}, rdata);
+    reqrsp_read({HWPE_CTRL_REQRSP_PULL, 2'b0}, rdata, 2);
     #(5*TCP);
     // TRIGGER
     reqrsp_write({HWPE_CTRL_REQRSP_TRIGGER, 2'b0}, 0);
     #(5*TCP);
     // STATUS (must be 1)
-    reqrsp_read({HWPE_CTRL_REQRSP_STATUS, 2'b0}, rdata);
+    reqrsp_read({HWPE_CTRL_REQRSP_STATUS, 2'b0}, rdata, 4);
     #(5*TCP);
     // JOBID (must be 1)
-    reqrsp_read({HWPE_CTRL_REQRSP_JOBID, 2'b0}, rdata);
+    reqrsp_read({HWPE_CTRL_REQRSP_JOBID, 2'b0}, rdata, 10);
     #(5*TCP);
     ctrl_i.done = 1'b1;
     #(TCP);
     ctrl_i.done = 1'b0;
     #(TCP);
     // STATUS (must be 0)
-    reqrsp_read({HWPE_CTRL_REQRSP_STATUS, 2'b0}, rdata);
+    reqrsp_read({HWPE_CTRL_REQRSP_STATUS, 2'b0}, rdata, 0);
     // SOFT CLEAR (all)
     reqrsp_write({HWPE_CTRL_REQRSP_SOFTCLR, 2'b0}, 0);
   end
 
-  hwpe_ctrl_reqrsp_interface #(
+  hwpe_ctrl_reqrsp_target #(
     .NB_CTRL_REGISTER ( 6            ),
     .NB_REGISTER      ( 4            ),
-    .N_IO_REGS        ( 8            ),
-    .reqrsp_req_t     ( reqrsp_req_t ),
-    .reqrsp_rsp_t     ( reqrsp_rsp_t )
-  ) i_interface (
+    .N_IO_REGS        ( 8            )
+  ) i_target (
     .clk_i         ( clk_i   ),
     .rst_ni        ( rst_ni  ),
     .clear_o       ( clear_o ),
-    .cfg_req_i     ( cfg_req_i ),
-    .cfg_rsp_o     ( cfg_rsp_o ),
+    .cfg           ( cfg     ),
     .ctrl_i        (ctrl_i   ),
     .flags_o       (flags_o  ),
     .reg_file      (reg_file )
