@@ -142,48 +142,48 @@ module tb_hwpe_ctrl_reqrsp_target
     ctrl_i = '0;
     #(50*TCP);
     // SOFT CLEAR (all but regfile)
-    reqrsp_write({HWPE_CTRL_REQRSP_SOFTCLR, 2'b0}, 1);
+    reqrsp_write({HWPE_CTRL_REQRSP_SOFTCLR, 3'b0}, 1);
     #(5*TCP);
     // SOFT CLEAR (all)
-    reqrsp_write({HWPE_CTRL_REQRSP_SOFTCLR, 2'b0}, 0);
+    reqrsp_write({HWPE_CTRL_REQRSP_SOFTCLR, 3'b0}, 0);
     #(5*TCP);
     // STATUS (must be 0)
-    reqrsp_read({HWPE_CTRL_REQRSP_STATUS, 2'b0}, rdata, 0);
+    reqrsp_read({HWPE_CTRL_REQRSP_STATUS, 3'b0}, rdata, 0);
     #(5*TCP);
     // JOBID (must be 0)
-    reqrsp_read({HWPE_CTRL_REQRSP_JOBID, 2'b0}, rdata, 0);
+    reqrsp_read({HWPE_CTRL_REQRSP_JOBID, 3'b0}, rdata, 0);
     #(5*TCP);
     // PUSH x 3
-    reqrsp_write({HWPE_CTRL_REQRSP_PUSH, 2'b0}, 64'h12345678_9ABCDEF0);
+    reqrsp_write({HWPE_CTRL_REQRSP_PUSH, 3'b0}, 64'h12345678_9ABCDEF0);
     #(TCP);
-    reqrsp_write({HWPE_CTRL_REQRSP_PUSH, 2'b0}, 64'hDEADBEEF_0BADF00D);
+    reqrsp_write({HWPE_CTRL_REQRSP_PUSH, 3'b0}, 64'hDEADBEEF_0BADF00D);
     #(TCP);
-    reqrsp_write({HWPE_CTRL_REQRSP_PUSH, 2'b0}, 64'h01234567_FEDCBA98);
+    reqrsp_write({HWPE_CTRL_REQRSP_PUSH, 3'b0}, 64'h01234567_FEDCBA98);
     #(5*TCP);
     // PULL x 3
-    reqrsp_read({HWPE_CTRL_REQRSP_PULL, 2'b0}, rdata, 2);
+    reqrsp_read({HWPE_CTRL_REQRSP_PULL, 3'b0}, rdata, 2);
     #(TCP);
-    reqrsp_read({HWPE_CTRL_REQRSP_PULL, 2'b0}, rdata, 2);
+    reqrsp_read({HWPE_CTRL_REQRSP_PULL, 3'b0}, rdata, 2);
     #(TCP);
-    reqrsp_read({HWPE_CTRL_REQRSP_PULL, 2'b0}, rdata, 2);
+    reqrsp_read({HWPE_CTRL_REQRSP_PULL, 3'b0}, rdata, 2);
     #(5*TCP);
     // TRIGGER
-    reqrsp_write({HWPE_CTRL_REQRSP_TRIGGER, 2'b0}, 0);
+    reqrsp_write({HWPE_CTRL_REQRSP_TRIGGER, 3'b0}, 0);
     #(5*TCP);
     // STATUS (must be 1)
-    reqrsp_read({HWPE_CTRL_REQRSP_STATUS, 2'b0}, rdata, 4);
+    reqrsp_read({HWPE_CTRL_REQRSP_STATUS, 3'b0}, rdata, 4);
     #(5*TCP);
     // JOBID (must be 1)
-    reqrsp_read({HWPE_CTRL_REQRSP_JOBID, 2'b0}, rdata, 10);
+    reqrsp_read({HWPE_CTRL_REQRSP_JOBID, 3'b0}, rdata, 10);
     #(5*TCP);
     ctrl_i.done = 1'b1;
     #(TCP);
     ctrl_i.done = 1'b0;
     #(TCP);
     // STATUS (must be 0)
-    reqrsp_read({HWPE_CTRL_REQRSP_STATUS, 2'b0}, rdata, 0);
+    reqrsp_read({HWPE_CTRL_REQRSP_STATUS, 3'b0}, rdata, 0);
     // SOFT CLEAR (all)
-    reqrsp_write({HWPE_CTRL_REQRSP_SOFTCLR, 2'b0}, 0);
+    reqrsp_write({HWPE_CTRL_REQRSP_SOFTCLR, 3'b0}, 0);
   end
 
   hwpe_ctrl_reqrsp_target #(
