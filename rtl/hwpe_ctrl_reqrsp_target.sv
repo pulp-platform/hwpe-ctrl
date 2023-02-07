@@ -58,6 +58,8 @@ module hwpe_ctrl_reqrsp_target
   logic job_id_update_d, job_id_update_q;
   logic [15:0] job_id_d, job_id_q;
 
+  logic [63:0] register_file_w_data_d;
+
   logic [NB_REGISTER-1:0][REGISTER_WIDTH-1:0] register_file;
   logic [2:0] ctrl_reg_d;
   logic [$clog2(NB_REGISTER)-1:0] pull_cnt_d, pull_cnt_q;
@@ -70,8 +72,8 @@ module hwpe_ctrl_reqrsp_target
   
   logic done_q;
 
-  // selected control register is given by addr bits [4:2] (masked with valid)
-  assign ctrl_reg_d = cfg.q_valid ? cfg.q_addr[4:2] : '0;
+  // selected control register is given by addr bits [5:3] (masked with valid)
+  assign ctrl_reg_d = cfg.q_valid ? cfg.q_addr[5:3] : '0;
 
   // FSM
   always_ff @(posedge clk_i or negedge rst_ni)
@@ -115,8 +117,11 @@ module hwpe_ctrl_reqrsp_target
       register_file <= '0;
     end
     else if(cfg.q_valid & cfg.q_write & cfg.q_ready && ctrl_reg_d == HWPE_CTRL_REQRSP_PUSH) begin
-      register_file[push_cnt_q] <= cfg.q_data;
+      register_file[push_cnt_q] <= register_file_w_data_d;
     end
+  end
+  for(genvar ii=0; ii<REGISTER_WIDTH/8; ii+=1) begin
+    assign register_file_w_data_d[(ii+1)*8-1:ii*8] = cfg.q_strb[ii] ? cfg.q_data[(ii+1)*8-1:ii*8] : register_file[push_cnt_q][(ii+1)*8-1:ii*8];
   end
 
   // response target
@@ -149,8 +154,8 @@ module hwpe_ctrl_reqrsp_target
     ctrl_reg_d == HWPE_CTRL_REQRSP_STATUS ? (state_q == RUN ? 1 : 0) :
     ctrl_reg_d == HWPE_CTRL_REQRSP_JOBID  ? job_id_q :
     ctrl_reg_d == HWPE_CTRL_REQRSP_PULL   ? register_file[pull_cnt_q] : '0
-  ) : '0;
-  assign cfg_p_valid_d = (cfg.q_valid & ~cfg.q_write) ? 1'b1 : '0;
+  ) : (cfg.q_valid & cfg.q_write) ? cfg.q_data : '0;
+  assign cfg_p_valid_d = cfg.q_valid ? 1'b1 : '0;
 
   // target is always ready, response comes from reqrsp_response_p
   assign cfg.q_ready = '1;
@@ -170,7 +175,8 @@ module hwpe_ctrl_reqrsp_target
       push_cnt_q <= push_cnt_d;
     end
   end
-  assign push_cnt_d = (cfg.q_valid & cfg.q_write) && ctrl_reg_d == HWPE_CTRL_REQRSP_PUSH ? (push_cnt_q == NB_REGISTER-1 ? '0 : push_cnt_q + 1) : push_cnt_q;
+  // checking cfg.q_strb[7] is useful to support a 32-bit core (update push on the last byte active)
+  assign push_cnt_d = (cfg.q_valid & cfg.q_write & cfg.q_strb[7]) && ctrl_reg_d == HWPE_CTRL_REQRSP_PUSH ? (push_cnt_q == NB_REGISTER-1 ? '0 : push_cnt_q + 1) : push_cnt_q;
 
   // pull counter
   always_ff @(posedge clk_i or negedge rst_ni)
