@@ -332,7 +332,7 @@ module hwpe_ctrl_uloop
       begin
         flags_o = shadow_flags_rd;
         flags_o.valid = out_valid;
-        flags_o.ready = shadow_flags_wr.valid;
+        flags_o.ready = shadow_flags_wr.ready;
         flags_o.loop  = out_loop;
       end
 
