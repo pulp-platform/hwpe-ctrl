@@ -19,26 +19,45 @@ interface hwpe_ctrl_intf_periph
   input logic clk
 );
 
-  parameter int unsigned ID_WIDTH = 0;
+  parameter  int unsigned AddrWidth = -1;
+  parameter  int unsigned DataWidth = -1;
+  parameter  int unsigned ID_WIDTH  = -1;
+  localparam int unsigned BeWidth   = DataWidth/8;
 
-  logic                req;
-  logic                gnt;
-  logic [31:0]         add;
-  logic                wen;
-  logic [3:0]          be;
-  logic [31:0]         data;
-  logic [ID_WIDTH-1:0] id;
-  logic [31:0]         r_data;
-  logic                r_valid;
-  logic [ID_WIDTH-1:0] r_id;
+  logic                 req;
+  logic                 gnt;
+  logic [AddrWidth-1:0] add;
+  logic                 wen;
+  logic [BeWidth-1:0]   be;
+  logic [DataWidth-1:0] data;
+  logic [ID_WIDTH-1:0]  id;
+  logic [DataWidth-1:0] r_data;
+  logic                 r_valid;
+  logic [ID_WIDTH-1:0]  r_id;
 
   modport master (
-    output req, add, wen, be, data, id,
-    input  gnt, r_data, r_valid, r_id
+    output req,
+    output add,
+    output wen,
+    output be,
+    output data,
+    output id,
+    input  gnt,
+    input  r_data,
+    input  r_valid,
+    input  r_id
   );
   modport slave (
-    input  req, add, wen, be, data, id,
-    output gnt, r_data, r_valid, r_id
+    input  req,
+    input  add,
+    input  wen,
+    input  be,
+    input  data,
+    input  id,
+    output gnt,
+    output r_data,
+    output r_valid,
+    output r_id
   );
 
 endinterface // hwpe_ctrl_intf_periph
