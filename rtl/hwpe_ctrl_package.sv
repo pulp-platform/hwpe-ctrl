@@ -1,7 +1,7 @@
 /*
  * hwpe_ctrl_package.sv
  * Francesco Conti <f.conti@unibo.it>
- *
+ * Arpan Suravi Prasad <prasadar@iis.ee.ethz.ch>
  * Copyright (C) 2014-2018 ETH Zurich, University of Bologna
  * Copyright and related rights are licensed under the Solderpad Hardware
  * License, Version 0.51 (the "License"); you may not use this file except in
@@ -114,11 +114,15 @@ package hwpe_ctrl_package;
     logic                                                   valid;
     logic                                                   ready;
     logic [ULOOP_MAX_NB_REG-1:0]  [31:0]                    offs;
+    logic [ULOOP_MAX_NB_REG-1:0]  [31:0]                    next_offs;
     logic [ULOOP_MAX_NB_LOOPS-1:0][ULOOP_MAX_CNT_WIDTH-1:0] idx;
+    logic [ULOOP_MAX_NB_LOOPS-1:0][ULOOP_MAX_CNT_WIDTH-1:0] next_idx;
     logic [ULOOP_MAX_NB_LOOPS-1:0]                          idx_update;
+    logic                                                   next_valid;
+    logic                                                   next_done;
     logic [$clog2(ULOOP_MAX_NB_LOOPS)-1:0]                  loop;
   } flags_uloop_t;
-
+  
   typedef struct packed {
     logic [4:0] uloop_addr;
     logic [3:0] nb_ops;
