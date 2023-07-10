@@ -22,7 +22,9 @@ module hwpe_ctrl_regfile
   parameter int unsigned ID_WIDTH       = 16,
   parameter int unsigned N_IO_REGS      = 2,
   parameter int unsigned N_GENERIC_REGS = 0,
-  parameter int unsigned EXT_IN_REGGED  = REGFILE_EXT_IN_REGGED
+  parameter int unsigned EXT_IN_REGGED  = REGFILE_EXT_IN_REGGED,
+  parameter int unsigned AddrWidth      = 32,
+  parameter int unsigned DataWidth      = 32
 )
 (
   input  logic           clk_i,
@@ -49,14 +51,14 @@ module hwpe_ctrl_regfile
   localparam int unsigned SCM_ADDR_WIDTH  = $clog2(N_CONTEXT*N_IO_REGS + N_GENERIC_REGS + N_MANDATORY_REGS - 2);
   localparam int unsigned N_SCM_REGISTERS = 2**SCM_ADDR_WIDTH;
 
-  logic [N_CONTEXT-1:0] [N_REGISTERS-1:N_MANDATORY_REGS+N_RESERVED_REGS+N_MAX_GENERIC_REGS]  [31:0] regfile_mem;
-  logic [N_MANDATORY_REGS-1:2]                                                               [31:0] regfile_mem_mandatory;
-  logic [N_MANDATORY_REGS+N_RESERVED_REGS+N_GENERIC_REGS-1:N_MANDATORY_REGS+N_RESERVED_REGS] [31:0] regfile_mem_generic;
-  logic                                                                                      [31:0] regfile_mem_dout;
-  logic                                                                                      [31:0] regfile_out_rdata_int;
-  logic                                                                                      [31:0] regfile_mem_mandatory_dout;
-  logic                                                                                      [31:0] regfile_mem_generic_dout;
-  logic                                                                                      [31:0] regfile_mem_io_dout;
+  logic [N_CONTEXT-1:0] [N_REGISTERS-1:N_MANDATORY_REGS+N_RESERVED_REGS+N_MAX_GENERIC_REGS]  [DataWidth-1:0] regfile_mem;
+  logic [N_MANDATORY_REGS-1:2]                                                               [DataWidth-1:0] regfile_mem_mandatory;
+  logic [N_MANDATORY_REGS+N_RESERVED_REGS+N_GENERIC_REGS-1:N_MANDATORY_REGS+N_RESERVED_REGS] [DataWidth-1:0] regfile_mem_generic;
+  logic                                                                                      [DataWidth-1:0] regfile_mem_dout;
+  logic                                                                                      [DataWidth-1:0] regfile_out_rdata_int;
+  logic                                                                                      [DataWidth-1:0] regfile_mem_mandatory_dout;
+  logic                                                                                      [DataWidth-1:0] regfile_mem_generic_dout;
+  logic                                                                                      [DataWidth-1:0] regfile_mem_io_dout;
 
   logic [7:0] offload_job_id;
   logic       offload_job_id_incr;
@@ -66,10 +68,10 @@ module hwpe_ctrl_regfile
   logic                             regfile_latch_re;
   logic [SCM_ADDR_WIDTH-1:0]        regfile_latch_rd_addr;
   logic [SCM_ADDR_WIDTH-1:0]        regfile_latch_wr_addr;
-  logic [31:0]                      regfile_latch_rdata;
+  logic [DataWidth-1:0]             regfile_latch_rdata;
   logic                             regfile_latch_we;
-  logic [31:0]                      regfile_latch_wdata;
-  logic [3:0]                       regfile_latch_be;
+  logic [DataWidth-1:0]             regfile_latch_wdata;
+  logic [DataWidth/8-1:0]           regfile_latch_be;
   logic [N_SCM_REGISTERS-1:0][31:0] regfile_latch_mem;
 
   logic [1:0] r_finished_cnt;
@@ -104,7 +106,7 @@ module hwpe_ctrl_regfile
     hwpe_ctrl_regfile_latch_test_wrap #(
       .REGFILE_SCM ( REGFILE_SCM    ),
       .ADDR_WIDTH  ( SCM_ADDR_WIDTH ),
-      .DATA_WIDTH  ( 32             )
+      .DATA_WIDTH  ( DataWidth      )
     ) i_regfile   (
       .clk        ( clk_i                           ),
       .rst_n      ( rst_ni                          ),
@@ -159,7 +161,7 @@ module hwpe_ctrl_regfile
           regfile_mem_mandatory_dout <= regfile_mem_mandatory[regfile_in_i.addr[LOG_REGS-1:0]];
         // Unknown address
         else
-          regfile_mem_mandatory_dout <= 32'hdeadbeef;
+          regfile_mem_mandatory_dout <= 'hdeadbeef;
       end
     end
     assign regfile_mem_dout = (~r_was_mandatory) ? regfile_latch_rdata : regfile_mem_mandatory_dout;
