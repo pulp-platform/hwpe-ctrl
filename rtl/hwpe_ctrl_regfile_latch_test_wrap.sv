@@ -15,6 +15,7 @@
 
 module hwpe_ctrl_regfile_latch_test_wrap
 #(
+   parameter int unsigned RegfileScm = 1,
    parameter ADDR_WIDTH = 5,
    parameter DATA_WIDTH = 32,
    parameter NUM_BYTE   = DATA_WIDTH/8
@@ -82,23 +83,42 @@ module hwpe_ctrl_regfile_latch_test_wrap
    end
 
    assign Q_T = ReadData;
-   
-   hwpe_ctrl_regfile_latch #(
-      .ADDR_WIDTH ( ADDR_WIDTH ),
-      .DATA_WIDTH ( DATA_WIDTH ),
-      .NUM_BYTE   ( NUM_BYTE   )
-   ) hwpe_ctrl_regfile_latch_i (
-      .clk         ( clk               ),
-      .rst_n       ( rst_n             ),
-      .clear       ( clear             ),
-      .ReadEnable  ( ReadEnable_muxed  ),
-      .ReadAddr    ( ReadAddr_muxed    ),
-      .ReadData    ( ReadData          ),
-      .WriteEnable ( WriteEnable_muxed ),
-      .WriteAddr   ( WriteAddr_muxed   ),
-      .WriteData   ( WriteData_muxed   ),
-      .WriteBE     ( WriteBE_muxed     ),
-      .MemContent  ( MemContent        )
-   );
+
+   if (RegfileScm == 1) begin : gen_scm_regfile
+     hwpe_ctrl_regfile_latch #(
+        .ADDR_WIDTH ( ADDR_WIDTH ),
+        .DATA_WIDTH ( DATA_WIDTH ),
+        .NUM_BYTE   ( NUM_BYTE   )
+     ) hwpe_ctrl_regfile_latch_i (
+        .clk         ( clk               ),
+        .rst_n       ( rst_n             ),
+        .clear       ( clear             ),
+        .ReadEnable  ( ReadEnable_muxed  ),
+        .ReadAddr    ( ReadAddr_muxed    ),
+        .ReadData    ( ReadData          ),
+        .WriteEnable ( WriteEnable_muxed ),
+        .WriteAddr   ( WriteAddr_muxed   ),
+        .WriteData   ( WriteData_muxed   ),
+        .WriteBE     ( WriteBE_muxed     ),
+        .MemContent  ( MemContent        )
+     );
+   end else begin : gen_ff_regfile
+     hwpe_ctrl_regfile_ff #(
+        .AddrWidth ( ADDR_WIDTH ),
+        .DataWidth ( DATA_WIDTH )
+     ) hwpe_ctrl_regfile_ff_i (
+        .clk_i         ( clk               ),
+        .rst_ni        ( rst_n             ),
+        .clear_i       ( clear             ),
+        .ReadEnable_i  ( ReadEnable_muxed  ),
+        .ReadAddr_i    ( ReadAddr_muxed    ),
+        .ReadData_o    ( ReadData          ),
+        .WriteEnable_i ( WriteEnable_muxed ),
+        .WriteAddr_i   ( WriteAddr_muxed   ),
+        .WriteData_i   ( WriteData_muxed   ),
+        .WriteBE_i     ( WriteBE_muxed     ),
+        .MemContent_o  ( MemContent        )
+     );
+   end
 
 endmodule // hwpe_ctrl_regfile_latch
