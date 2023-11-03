@@ -17,6 +17,7 @@
 module hwpe_ctrl_slave
   import hwpe_ctrl_package::*;
 #(
+  parameter int unsigned REGFILE_SCM    = 1,
   parameter int unsigned N_CORES        = 4,
   parameter int unsigned N_CONTEXT      = 2,
   parameter int unsigned N_EVT          = REGFILE_N_EVT,
@@ -240,6 +241,7 @@ module hwpe_ctrl_slave
   assign regfile_flags.running_context = running_context;
 
   hwpe_ctrl_regfile #(
+    .REGFILE_SCM    ( REGFILE_SCM    ),
     .N_CONTEXT      ( N_CONTEXT      ),
     .N_IO_REGS      ( N_IO_REGS      ),
     .N_GENERIC_REGS ( N_GENERIC_REGS ),
