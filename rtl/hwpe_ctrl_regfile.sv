@@ -17,7 +17,7 @@
 module hwpe_ctrl_regfile
   import hwpe_ctrl_package::*;
 #(
-  parameter int unsigned RegfileScm     = 1,
+  parameter int unsigned REGFILE_SCM    = 1,
   parameter int unsigned N_CONTEXT      = REGFILE_N_CONTEXT,
   parameter int unsigned ID_WIDTH       = 16,
   parameter int unsigned N_IO_REGS      = 2,
@@ -102,9 +102,9 @@ module hwpe_ctrl_regfile
     logic [N_CONTEXT-1:0]                  wren_cxt;
 
     hwpe_ctrl_regfile_latch_test_wrap #(
-      .RegfileScm (RegfileScm   ),
-      .ADDR_WIDTH(SCM_ADDR_WIDTH),
-      .DATA_WIDTH(32)
+      .REGFILE_SCM ( REGFILE_SCM    ),
+      .ADDR_WIDTH  ( SCM_ADDR_WIDTH ),
+      .DATA_WIDTH  ( 32             )
     ) i_regfile   (
       .clk        ( clk_i                           ),
       .rst_n      ( rst_ni                          ),

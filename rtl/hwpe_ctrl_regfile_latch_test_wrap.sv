@@ -15,7 +15,7 @@
 
 module hwpe_ctrl_regfile_latch_test_wrap
 #(
-   parameter int unsigned RegfileScm = 1,
+   parameter int unsigned REGFILE_SCM = 1,
    parameter ADDR_WIDTH = 5,
    parameter DATA_WIDTH = 32,
    parameter NUM_BYTE   = DATA_WIDTH/8
@@ -84,7 +84,7 @@ module hwpe_ctrl_regfile_latch_test_wrap
 
    assign Q_T = ReadData;
 
-   if (RegfileScm == 1) begin : gen_scm_regfile
+   if (REGFILE_SCM == 1) begin : gen_scm_regfile
      hwpe_ctrl_regfile_latch #(
         .ADDR_WIDTH ( ADDR_WIDTH ),
         .DATA_WIDTH ( DATA_WIDTH ),
