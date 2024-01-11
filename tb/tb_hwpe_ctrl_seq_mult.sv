@@ -13,10 +13,11 @@
  * specific language governing permissions and limitations under the License.
  */
 
-timeunit 1ns;
-timeprecision 1ps;
 
 module tb_hwpe_ctrl_seq_mult;
+
+  timeunit 1ns;
+  timeprecision 1ps;
 
   localparam AW = 8;
   localparam BW = 8;
