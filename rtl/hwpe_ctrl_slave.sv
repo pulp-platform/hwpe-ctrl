@@ -25,7 +25,7 @@ module hwpe_ctrl_slave
   parameter int unsigned N_GENERIC_REGS = 0,
   parameter int unsigned N_SW_EVT       = 8,
   parameter int unsigned ID_WIDTH       = 16,
-  parameter int unsigned DataWidth      = 32,
+  parameter int unsigned DATA_WIDTH     = 32,
   parameter int unsigned EXT_IN_REGGED  = REGFILE_EXT_IN_REGGED
 )
 (
@@ -247,7 +247,7 @@ module hwpe_ctrl_slave
     .N_IO_REGS      ( N_IO_REGS      ),
     .N_GENERIC_REGS ( N_GENERIC_REGS ),
     .ID_WIDTH       ( ID_WIDTH       ),
-    .DataWidth      ( DataWidth      )
+    .DATA_WIDTH     ( DATA_WIDTH     )
   ) i_regfile (
     .clk_i         ( clk_i         ),
     .rst_ni        ( rst_ni        ),

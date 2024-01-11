@@ -23,8 +23,7 @@ module hwpe_ctrl_regfile
   parameter int unsigned N_IO_REGS      = 2,
   parameter int unsigned N_GENERIC_REGS = 0,
   parameter int unsigned EXT_IN_REGGED  = REGFILE_EXT_IN_REGGED,
-  parameter int unsigned AddrWidth      = 32,
-  parameter int unsigned DataWidth      = 32
+  parameter int unsigned DATA_WIDTH     = 32
 )
 (
   input  logic           clk_i,
@@ -51,14 +50,14 @@ module hwpe_ctrl_regfile
   localparam int unsigned SCM_ADDR_WIDTH  = $clog2(N_CONTEXT*N_IO_REGS + N_GENERIC_REGS + N_MANDATORY_REGS - 2);
   localparam int unsigned N_SCM_REGISTERS = 2**SCM_ADDR_WIDTH;
 
-  logic [N_CONTEXT-1:0] [N_REGISTERS-1:N_MANDATORY_REGS+N_RESERVED_REGS+N_MAX_GENERIC_REGS]  [DataWidth-1:0] regfile_mem;
-  logic [N_MANDATORY_REGS-1:2]                                                               [DataWidth-1:0] regfile_mem_mandatory;
-  logic [N_MANDATORY_REGS+N_RESERVED_REGS+N_GENERIC_REGS-1:N_MANDATORY_REGS+N_RESERVED_REGS] [DataWidth-1:0] regfile_mem_generic;
-  logic                                                                                      [DataWidth-1:0] regfile_mem_dout;
-  logic                                                                                      [DataWidth-1:0] regfile_out_rdata_int;
-  logic                                                                                      [DataWidth-1:0] regfile_mem_mandatory_dout;
-  logic                                                                                      [DataWidth-1:0] regfile_mem_generic_dout;
-  logic                                                                                      [DataWidth-1:0] regfile_mem_io_dout;
+  logic [N_CONTEXT-1:0] [N_REGISTERS-1:N_MANDATORY_REGS+N_RESERVED_REGS+N_MAX_GENERIC_REGS]  [DATA_WIDTH-1:0] regfile_mem;
+  logic [N_MANDATORY_REGS-1:2]                                                               [DATA_WIDTH-1:0] regfile_mem_mandatory;
+  logic [N_MANDATORY_REGS+N_RESERVED_REGS+N_GENERIC_REGS-1:N_MANDATORY_REGS+N_RESERVED_REGS] [DATA_WIDTH-1:0] regfile_mem_generic;
+  logic                                                                                      [DATA_WIDTH-1:0] regfile_mem_dout;
+  logic                                                                                      [DATA_WIDTH-1:0] regfile_out_rdata_int;
+  logic                                                                                      [DATA_WIDTH-1:0] regfile_mem_mandatory_dout;
+  logic                                                                                      [DATA_WIDTH-1:0] regfile_mem_generic_dout;
+  logic                                                                                      [DATA_WIDTH-1:0] regfile_mem_io_dout;
 
   logic [7:0] offload_job_id;
   logic       offload_job_id_incr;
@@ -68,10 +67,10 @@ module hwpe_ctrl_regfile
   logic                             regfile_latch_re;
   logic [SCM_ADDR_WIDTH-1:0]        regfile_latch_rd_addr;
   logic [SCM_ADDR_WIDTH-1:0]        regfile_latch_wr_addr;
-  logic [DataWidth-1:0]             regfile_latch_rdata;
+  logic [DATA_WIDTH-1:0]            regfile_latch_rdata;
   logic                             regfile_latch_we;
-  logic [DataWidth-1:0]             regfile_latch_wdata;
-  logic [DataWidth/8-1:0]           regfile_latch_be;
+  logic [DATA_WIDTH-1:0]            regfile_latch_wdata;
+  logic [DATA_WIDTH/8-1:0]          regfile_latch_be;
   logic [N_SCM_REGISTERS-1:0][31:0] regfile_latch_mem;
 
   logic [1:0] r_finished_cnt;
@@ -106,7 +105,7 @@ module hwpe_ctrl_regfile
     hwpe_ctrl_regfile_latch_test_wrap #(
       .REGFILE_SCM ( REGFILE_SCM    ),
       .ADDR_WIDTH  ( SCM_ADDR_WIDTH ),
-      .DATA_WIDTH  ( DataWidth      )
+      .DATA_WIDTH  ( DATA_WIDTH     )
     ) i_regfile   (
       .clk        ( clk_i                           ),
       .rst_n      ( rst_ni                          ),
