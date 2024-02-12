@@ -1,4 +1,4 @@
-/* 
+/*
  * hwpe_ctrl_regfile_latch.sv
  * Francesco Conti <fconti@iis.ee.ethz.ch>
  *
@@ -87,8 +87,7 @@ module hwpe_ctrl_regfile_latch_test_wrap
    if (REGFILE_SCM == 1) begin : gen_scm_regfile
      hwpe_ctrl_regfile_latch #(
         .ADDR_WIDTH ( ADDR_WIDTH ),
-        .DATA_WIDTH ( DATA_WIDTH ),
-        .NUM_BYTE   ( NUM_BYTE   )
+        .DATA_WIDTH ( DATA_WIDTH )
      ) hwpe_ctrl_regfile_latch_i (
         .clk         ( clk               ),
         .rst_n       ( rst_n             ),
