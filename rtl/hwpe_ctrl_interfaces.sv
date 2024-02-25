@@ -13,11 +13,6 @@
  * specific language governing permissions and limitations under the License.
  */
 
-`ifndef SYNTHESIS
-timeunit 1ps;
-timeprecision 1ps;
-`endif
-
 interface hwpe_ctrl_intf_periph (
   input logic clk
 );
@@ -43,48 +38,5 @@ interface hwpe_ctrl_intf_periph (
     input  req, add, wen, be, data, id,
     output gnt, r_data, r_valid, r_id
   );
-
-`ifndef SYNTHESIS
-  task write(
-    input logic [31:0] w_add,
-    input logic [3:0]  w_be,
-    input logic [31:0] w_data,
-    input time TCP,
-    input time TA
-  );
-    #(TA);
-    add = w_add;
-    data = w_data;
-    wen = 1'b0;
-    req = 1'b1;
-    be = w_be;
-    id = '0;
-    while (gnt != 1'b1)
-      #(TCP);
-    #(TCP);
-    req = 1'b0;
-    #(TCP-TA);
-  endtask
-
-  task read(
-    input logic [31:0] r_add,
-    output logic [31:0] rdata,
-    input time TCP,
-    input time TA
-  );
-    #(TA);
-    add = r_add;
-    req = 1'b1;
-    wen = 1'b1;
-    id = '0;
-    while (gnt != 1'b1)
-      #(TCP);
-    #(TCP-TA);
-    rdata = r_data;
-    #(TA);
-    req = 1'b0;
-    #(TCP-TA);
-  endtask
-`endif
 
 endinterface // hwpe_ctrl_intf_periph
