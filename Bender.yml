@@ -19,6 +19,7 @@ sources:
       # Level 1
       - rtl/hwpe_ctrl_regfile_ff.sv
       - rtl/hwpe_ctrl_regfile_latch.sv
+      - rtl/hwpe_ctrl_regfile_parity.sv
       - rtl/hwpe_ctrl_seq_mult.sv
       - rtl/hwpe_ctrl_uloop.sv
       # Level 2

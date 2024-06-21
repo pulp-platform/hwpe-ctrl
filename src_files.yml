@@ -11,6 +11,7 @@ hwpe-ctrl:
     rtl/hwpe_ctrl_regfile.sv,
     rtl/hwpe_ctrl_regfile_latch.sv,
     rtl/hwpe_ctrl_regfile_latch_test_wrap.sv,
+    rtl/hwpe_ctrl_regfile_parity.sv,
     rtl/hwpe_ctrl_slave.sv,
     rtl/hwpe_ctrl_seq_mult.sv,
     rtl/hwpe_ctrl_uloop.sv,
