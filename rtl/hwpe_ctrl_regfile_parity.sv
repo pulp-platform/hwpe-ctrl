@@ -12,7 +12,34 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Module that checks for even parity on a regfile, output delayed to not end up in critcal path.
+ * Module that checks for *almost bitwise even parity on a regfile, output delayed to not end up in critcal path.
+ *
+ * You should have one dedicated "parity register", to use this module
+ * |=======================================================================|
+ * || # reg |  offset  |  bits   |   bitmask    ||  content               ||
+ * ||-------+----------+---------+--------------++------------------------||
+ * ||-------+----------+---------+--------------++------------------------||
+ * ||  ANY  |    ANY   |         |              ||  PARITY_REGISTER:      ||
+ * ||       |          |  31:16  |  0xFFFF0000  ||  PARITY_INFORMATION    ||
+ * ||       |          |  15: 0  |  0x0000FFFF  ||  XOR_SIGNATURE         ||
+ * |=======================================================================|
+ * 
+ * The signature has the following format
+ * XOR_SIGNATURE = PARITY_INFORMATION ^ REGISTER_1[15:0] ^ REGISTER_1[31:16] ^ REGISTER_2[15:0] ^ REGISTER_2[31:16] ... 
+ * 
+ * You can use the following c-code to calculate it:
+ * 
+ * uint_32t parity_register; // Final value in register
+ * uint_16t parity_info;     // Your additional info in here
+ * 
+ * // Collect all other registers
+ * uint_32t xor_signature = 0; // Temp variable to collect all parity info
+ * xor_signature ^= register_1;
+ * xor_signature ^= register_2;
+ *  .... 
+ * 
+ * parity_register = (xor_signature ^ ((xor_signature ^ parity_info) << 16)) & 0xFF00 | parity_info & 0x00FF
+ * 
  */
 
 module hwpe_ctrl_regfile_parity
@@ -54,7 +81,7 @@ module hwpe_ctrl_regfile_parity
 
   // Take output of tree and OR Bits -> One register should be set in a way so each bit XORs to 0.
   logic fault_detected;
-  assign fault_detected = |xor_intermediate[0];
+  assign fault_detected = |(xor_intermediate[0][31:16] ^ xor_intermediate[0][15:0]);
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
