@@ -12,9 +12,14 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * Module that checks for *almost bitwise even parity on a regfile, output delayed to not end up in critcal path.
+ * Module that checks for bitwise even parity on a regfile for all dwords.
+ * Output delayed to not end up in critcal path.
  *
- * You should have one dedicated "parity register", to use this module
+ * You should have one dedicated "parity register", to use this module where
+ * you place a XOR Signature dword (16 bits) to achieve parity. Where in the 
+ * register file this is is up to your implementation. You can use the other 
+ * half for something else, sensible would be additional parity information.
+ *
  * |=======================================================================|
  * || # reg |  offset  |  bits   |   bitmask    ||  content               ||
  * ||-------+----------+---------+--------------++------------------------||
@@ -24,7 +29,7 @@
  * ||       |          |  15: 0  |  0x0000FFFF  ||  XOR_SIGNATURE         ||
  * |=======================================================================|
  * 
- * The signature has the following format
+ * The signature should be the XOR of all dwords in the regfile e.g.:
  * XOR_SIGNATURE = PARITY_INFORMATION ^ REGISTER_1[15:0] ^ REGISTER_1[31:16] ^ REGISTER_2[15:0] ^ REGISTER_2[31:16] ... 
  * 
  * You can use the following c-code to calculate it:
@@ -38,7 +43,7 @@
  * xor_signature ^= register_2;
  *  .... 
  * 
- * parity_register = (xor_signature ^ ((xor_signature ^ parity_info) << 16)) & 0xFF00 | parity_info & 0x00FF
+ * parity_register = (xor_signature ^ ((xor_signature ^ parity_info) << 16)) & 0xFFFF0000 | parity_info & 0x0000FFFF
  * 
  */
 
