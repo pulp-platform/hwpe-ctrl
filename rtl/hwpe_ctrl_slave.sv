@@ -69,6 +69,8 @@ module hwpe_ctrl_slave
 
   logic triggered_q;
 
+  logic done_q1, done_q2;
+
   always_ff @(posedge clk_i or negedge rst_ni)
   begin
     if(rst_ni == 1'b0)
@@ -198,7 +200,7 @@ module hwpe_ctrl_slave
     regfile_flags.is_testset    = (cfg.req == 1'b1 && cfg.wen == 1'b1 && cfg.add[LOG_REGS+2-1:2] == REGFILE_MANDATORY_ACQUIRE) ? 1 : 0;  // Operation is a test&set to register context_ts
     regfile_flags.is_trigger    = (cfg.req == 1'b1 && cfg.wen == 1'b0 && cfg.add[LOG_REGS+2-1:2] == REGFILE_MANDATORY_TRIGGER && cfg.data == '0) ? 1 : 0;  // Operation is a trigger
     regfile_flags.is_commit     = (cfg.req == 1'b1 && cfg.wen == 1'b0 && cfg.add[LOG_REGS+2-1:2] == REGFILE_MANDATORY_TRIGGER) ? 1 : 0;  // Operation is a commit (or commit & trigger)
-    regfile_flags.true_done     = ctrl_i.done & flags_o.is_working;                                                             // This is necessary because sometimes done is asserted as soon as rst_ni becomes 1
+    regfile_flags.true_done     = (ctrl_i.done | done_q1) & ~done_q2;    // This is necessary because sometimes done is asserted as soon as rst_ni becomes 1
     flags_o.enable              = s_enable_after[3];                                                                            // Enable after three cycles from rst_ni
   end
 
@@ -463,6 +465,19 @@ module hwpe_ctrl_slave
       cfg_req_q <= 1'b0;
     else
       cfg_req_q <= cfg_req_d;
+  end
+
+  // FF to make flags_o.done a pulse, pulse should be two cycles long so no single event upset can completely destroy it
+  always_ff @(posedge clk_i or negedge rst_ni)
+  begin
+    if(!rst_ni) begin
+      done_q1 <= 1'b1;
+      done_q2 <= 1'b1;
+    end
+    else begin
+      done_q1 <= ctrl_i.done;
+      done_q2 <= done_q1;
+    end
   end
 
   assign cfg_id_d = cfg.id;
