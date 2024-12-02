@@ -18,7 +18,7 @@ module hwpe_ctrl_regfile
   import hwpe_ctrl_package::*;
 #(
   parameter int unsigned REGFILE_SCM    = 1,
-  parameter int unsigned N_CONTEXT      = REGFILE_N_CONTEXT,
+  parameter int unsigned N_CONTEXT      = REGFILE_N_DEFAULT_CONTEXT,
   parameter int unsigned ID_WIDTH       = 16,
   parameter int unsigned N_IO_REGS      = 2,
   parameter int unsigned N_GENERIC_REGS = 0,
