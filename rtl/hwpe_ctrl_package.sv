@@ -16,7 +16,8 @@
 package hwpe_ctrl_package;
 
   parameter int unsigned REGFILE_N_MAX_CORES        = 16;
-  parameter int unsigned REGFILE_N_CONTEXT          = 2;
+  parameter int unsigned REGFILE_N_MAX_CONTEXT      = 8;
+  parameter int unsigned REGFILE_N_DEFAULT_CONTEXT  = 2;
   parameter int unsigned REGFILE_N_EVT              = 2;
   parameter int unsigned REGFILE_N_REGISTERS        = 64;
   parameter int unsigned REGFILE_N_MANDATORY_REGS   = 8;
@@ -65,18 +66,18 @@ package hwpe_ctrl_package;
   } regfile_out_t;
 
   typedef struct packed {
-    logic                                 true_done;
-    logic                                 full_context;
-    logic                                 is_mandatory;
-    logic                                 is_read;
-    logic                                 is_contexted;
-    logic                                 is_critical;
-    logic                                 is_testset;
-    logic                                 is_trigger;
-    logic                                 is_commit;
-    logic                                 is_working;
-    logic [$clog2(REGFILE_N_CONTEXT)-1:0] pointer_context;
-    logic [$clog2(REGFILE_N_CONTEXT)-1:0] running_context;
+    logic                                     true_done;
+    logic                                     full_context;
+    logic                                     is_mandatory;
+    logic                                     is_read;
+    logic                                     is_contexted;
+    logic                                     is_critical;
+    logic                                     is_testset;
+    logic                                     is_trigger;
+    logic                                     is_commit;
+    logic                                     is_working;
+    logic [$clog2(REGFILE_N_MAX_CONTEXT)-1:0] pointer_context;
+    logic [$clog2(REGFILE_N_MAX_CONTEXT)-1:0] running_context;
      // Extension
     logic         ext_we;
     logic         ext_re;       // Register on bus is extension port
