@@ -27,10 +27,10 @@ interface hwpe_ctrl_intf_periph
   logic                wen;
   logic [3:0]          be;
   logic [31:0]         data;
-  logic [ID_WIDTH-1:0] id;
+  logic [iomsb(ID_WIDTH):0] id;
   logic [31:0]         r_data;
   logic                r_valid;
-  logic [ID_WIDTH-1:0] r_id;
+  logic [iomsb(ID_WIDTH):0] r_id;
 
   modport master (
     output req, add, wen, be, data, id,
