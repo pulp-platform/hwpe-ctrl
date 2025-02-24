@@ -13,11 +13,13 @@
  * specific language governing permissions and limitations under the License.
  */
 
-interface hwpe_ctrl_intf_periph (
+interface hwpe_ctrl_intf_periph
+  import hwpe_ctrl_package::*;
+(
   input logic clk
 );
 
-  parameter int unsigned ID_WIDTH = -1;
+  parameter int unsigned ID_WIDTH = 0;
 
   logic                req;
   logic                gnt;
