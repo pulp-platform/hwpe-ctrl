@@ -94,6 +94,11 @@ module hwpe_ctrl_uloop
   assign flags_int.valid = flags_valid;
   assign flags_int.ready = 1'b1;
 
+  assign flags_int.next_valid = 1'b0;
+  assign flags_int.next_done = 1'b0;
+  assign flags_int.next_offs = '0;
+  assign flags_int.next_idx = '0;
+
 `ifndef SYNTHESIS
   enum { UPDATE, ITERATE_GOTO0, ITERATE, GOTO, TERMINATE, NULL } str_enum;
 
@@ -336,9 +341,9 @@ module hwpe_ctrl_uloop
         flags_o.next_offs = registers;
         flags_o.next_valid = flags_valid;
         flags_o.next_done  = done_int;
-        for(int i=0; i<NB_LOOPS; i++) begin 
+        for(int i=0; i<NB_LOOPS; i++) begin
           flags_o.next_idx[i]  = curr_idx[i];
-        end 
+        end
         // flags_o.next_idx  = curr_idx;
         flags_o.valid = out_valid;
         flags_o.ready = shadow_flags_wr.ready;
