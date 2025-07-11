@@ -120,11 +120,11 @@ module hwpe_ctrl_regfile
       .MemContent ( regfile_latch_mem               ),
 
       .BIST       ( 1'b0                            ),
-      .CSN_T      (                                 ),
-      .WEN_T      (                                 ),
-      .A_T        (                                 ),
-      .D_T        (                                 ),
-      .BE_T       (                                 ),
+      .CSN_T      ( 1'b0                            ),
+      .WEN_T      ( 1'b0                            ),
+      .A_T        (   '0                            ),
+      .D_T        (   '0                            ),
+      .BE_T       (   '0                            ),
       .Q_T        (                                 )
     );
 
@@ -306,6 +306,7 @@ module hwpe_ctrl_regfile
   assign regfile_mem_mandatory[REGFILE_MANDATORY_SOFTCLEAR] = '0;
   assign regfile_mem_mandatory[REGFILE_MANDATORY_FINISHED] = r_finished_cnt;
   // Extension
+  assign regfile_mem_mandatory[REGFILE_MANDATORY_SWEVT] = '0;
   assign regfile_mem_mandatory[REGFILE_MANDATORY_RESERVED] = regfile_in_i.wdata;
 
   // Assign Extension to external flag for access. Registered on demand
