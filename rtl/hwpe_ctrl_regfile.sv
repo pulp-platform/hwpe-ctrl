@@ -324,17 +324,6 @@ module hwpe_ctrl_regfile
     end
   endgenerate
 
-  logic [$clog2(ID_WIDTH)-1:0] data_src_encoded;
-
-  always_comb
-  begin : data_src_encoder
-    data_src_encoded = {$clog2(ID_WIDTH){1'b0}};
-    for(int i=0; i<ID_WIDTH; i++) begin
-      if(regfile_in_i.src[ID_WIDTH-1:0] == (i & {$clog2(ID_WIDTH){1'b1}}))
-        data_src_encoded = 1 << i;
-    end
-  end
-
   generate
 
     if(N_CONTEXT > 1) begin : multi_context_gen
