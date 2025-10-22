@@ -25,6 +25,7 @@ module hwpe_ctrl_slave
   parameter int unsigned N_GENERIC_REGS = 0,
   parameter int unsigned N_SW_EVT       = 8,
   parameter int unsigned ID_WIDTH       = 16,
+  parameter int unsigned CFG_ID_BITMASK = 1,
   parameter int unsigned EXT_IN_REGGED  = REGFILE_EXT_IN_REGGED
 )
 (
@@ -112,9 +113,13 @@ module hwpe_ctrl_slave
         begin
             if (regfile_flags.is_commit == 1)
             begin
-              for(int i=0; i<N_CORES; i++)
-                if (cfg.id[i] == 1'b1)
-                  offloading_core[pointer_context] <= i;
+              if (CFG_ID_BITMASK == 1) begin : bitmask_mode_multi_context
+                for(int i=0; i<N_CORES; i++)
+                  if (cfg.id[i] == 1'b1)
+                    offloading_core[pointer_context] <= i;
+              end else begin : user_id_mode_multi_context
+                offloading_core[pointer_context] <= cfg.id - 1;
+              end
             end
         end
       end
@@ -174,9 +179,13 @@ module hwpe_ctrl_slave
         begin
             if (regfile_flags.is_commit == 1)
             begin
-              for(int i=0; i<N_CORES; i++)
-                if (cfg.id[i] == 1'b1)
-                  offloading_core[0] <= i;
+              if (CFG_ID_BITMASK == 1) begin : bitmask_mode_single_context
+                for(int i=0; i<N_CORES; i++)
+                  if (cfg.id[i] == 1'b1)
+                    offloading_core[0] <= i;
+              end else begin : user_id_mode_single_context
+                offloading_core[0] <= cfg.id - 1;
+              end
             end
         end
       end
