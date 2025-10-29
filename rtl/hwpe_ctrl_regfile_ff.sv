@@ -41,6 +41,7 @@ module hwpe_ctrl_regfile_ff #(
   output logic [NumWords-1:0][DataWidth-1:0] MemContent_o
 );
 
+logic [DataWidth-1:0] r_data_d, r_data_q;
 logic [NumWords-1:0][DataWidth-1:0] data_d, data_q;
 
 logic clk_int;
@@ -50,7 +51,20 @@ assign enable = WriteEnable_i & (WriteAddr_i <= NumWords);
 
 assign clkg_en = enable | clear_i;
 
-assign ReadData_o = (ReadEnable_i && (ReadAddr_i <= NumWords)) ? data_q[ReadAddr_i] : '0;
+// Output read with 1 cycle latency
+always_ff @(posedge clk_i, negedge rst_ni) begin
+  if (~rst_ni)
+    r_data_q <= '0;
+  else begin
+    if (clear_i)
+      r_data_q <= '0;
+    else
+      r_data_q <= r_data_d;
+  end
+end
+
+assign r_data_d = (ReadEnable_i && (ReadAddr_i <= NumWords)) ? data_q[ReadAddr_i] : '0;
+assign ReadData_o = r_data_q;
 
 tc_clk_gating i_we_clkg    (
    .clk_i        ( clk_i   ),
