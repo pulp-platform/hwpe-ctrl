@@ -26,7 +26,9 @@ module hwpe_ctrl_slave
   parameter int unsigned N_SW_EVT       = 8,
   parameter int unsigned ID_WIDTH       = 16,
   parameter int unsigned CFG_ID_BITMASK = 1,
-  parameter int unsigned EXT_IN_REGGED  = REGFILE_EXT_IN_REGGED
+  parameter int unsigned EXT_IN_REGGED  = REGFILE_EXT_IN_REGGED,
+
+  localparam int unsigned LOG_CONTEXT         = N_CONTEXT > 1 ? $clog2(N_CONTEXT) : 1
 )
 (
   input  logic                clk_i,
@@ -38,14 +40,15 @@ module hwpe_ctrl_slave
 
   input  ctrl_slave_t         ctrl_i,
   output flags_slave_t        flags_o,
-  output ctrl_regfile_t       reg_file
+  output ctrl_regfile_t       reg_file,
+
+  output logic [LOG_CONTEXT:0] counter_pending
 );
 
   localparam int unsigned N_REGISTERS         = REGFILE_N_REGISTERS;
   localparam int unsigned N_MANDATORY_REGS    = REGFILE_N_MANDATORY_REGS;
   localparam int unsigned N_RESERVED_REGS     = REGFILE_N_RESERVED_REGS;
   localparam int unsigned LOG_REGS            = $clog2(N_REGISTERS);
-  localparam int unsigned LOG_CONTEXT         = N_CONTEXT > 1 ? $clog2(N_CONTEXT) : 1;
   localparam int unsigned LOG_REGS_MC         = LOG_REGS+LOG_CONTEXT;
   localparam int unsigned N_MAX_IO_REGS       = 2**$clog2(N_IO_REGS-1);
   localparam int unsigned N_MAX_GENERIC_REGS  = 2**$clog2(N_GENERIC_REGS-1);
@@ -61,7 +64,6 @@ module hwpe_ctrl_slave
   logic [N_CONTEXT-1:0][$clog2(N_CORES)-1:0] offloading_core;
   logic [LOG_CONTEXT-1:0] pointer_context;
   logic [LOG_CONTEXT-1:0] running_context;
-  logic [LOG_CONTEXT  :0] counter_pending;
 
   logic [3:0] s_enable_after;
   logic [1:0] s_clear;
