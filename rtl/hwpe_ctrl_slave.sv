@@ -26,7 +26,9 @@ module hwpe_ctrl_slave
   parameter int unsigned N_SW_EVT       = 8,
   parameter int unsigned ID_WIDTH       = 16,
   parameter int unsigned CFG_ID_BITMASK = 1,
-  parameter int unsigned EXT_IN_REGGED  = REGFILE_EXT_IN_REGGED
+  parameter int unsigned EXT_IN_REGGED  = REGFILE_EXT_IN_REGGED,
+
+  localparam int unsigned LOG_CONTEXT         = N_CONTEXT > 1 ? $clog2(N_CONTEXT) : 1
 )
 (
   input  logic                clk_i,
@@ -47,7 +49,6 @@ module hwpe_ctrl_slave
   localparam int unsigned N_MANDATORY_REGS    = REGFILE_N_MANDATORY_REGS;
   localparam int unsigned N_RESERVED_REGS     = REGFILE_N_RESERVED_REGS;
   localparam int unsigned LOG_REGS            = $clog2(N_REGISTERS);
-  localparam int unsigned LOG_CONTEXT         = N_CONTEXT > 1 ? $clog2(N_CONTEXT) : 1;
   localparam int unsigned LOG_REGS_MC         = LOG_REGS+LOG_CONTEXT;
   localparam int unsigned N_MAX_IO_REGS       = 2**$clog2(N_IO_REGS-1);
   localparam int unsigned N_MAX_GENERIC_REGS  = 2**$clog2(N_GENERIC_REGS-1);
