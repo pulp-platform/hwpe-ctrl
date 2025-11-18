@@ -38,7 +38,9 @@ module hwpe_ctrl_slave
 
   input  ctrl_slave_t         ctrl_i,
   output flags_slave_t        flags_o,
-  output ctrl_regfile_t       reg_file
+  output ctrl_regfile_t       reg_file,
+
+  output logic [LOG_CONTEXT:0] counter_pending
 );
 
   localparam int unsigned N_REGISTERS         = REGFILE_N_REGISTERS;
@@ -61,7 +63,6 @@ module hwpe_ctrl_slave
   logic [N_CONTEXT-1:0][$clog2(N_CORES)-1:0] offloading_core;
   logic [LOG_CONTEXT-1:0] pointer_context;
   logic [LOG_CONTEXT-1:0] running_context;
-  logic [LOG_CONTEXT  :0] counter_pending;
 
   logic [3:0] s_enable_after;
   logic [1:0] s_clear;
