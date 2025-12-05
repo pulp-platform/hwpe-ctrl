@@ -24,8 +24,8 @@
   * align with their required set of job-independent and job-dependent registers,
   * without modifying the mandatory registers.
   * Then, the `hwpe_ctrl_target` can be integrated by 1) overriding the parametric
-  * types `hwpe_ctrl_regif_in_t` and `hwpe_ctrl_regif_out_t`; 2) plugging the 
-  * OBI interface signals; 3) plugging `hwif_in` and `hwif_out`.
+  * types; 2) plugging the OBI interface signals; 3) plugging `hwif_in` and
+  * `hwif_out`.
   */
 
 module hwpe_ctrl_target
@@ -34,47 +34,49 @@ module hwpe_ctrl_target
   parameter int unsigned NB_CONTEXT      = 2,
   parameter int unsigned NB_CLEAR_CYCLES = 3,
   parameter type hwpe_ctrl_regif_in_t  = logic, // must be overridden!
-  parameter type hwpe_ctrl_regif_out_t = logic  // must be overridden!
+  parameter type hwpe_ctrl_regif_out_t = logic, // must be overridden!
+  parameter type hwpe_ctrl_job_indep_t = logic, // must be overridden!
+  parameter type hwpe_ctrl_job_dep_t   = logic, // must be overridden!
 )
 (
-  input  logic                                            clk_i,
-  input  logic                                            rst_ni,
-  output logic                                            clear_o,
+  input  logic                 clk_i,
+  input  logic                 rst_ni,
+  output logic                 clear_o,
 
   // peripheral interconnect side
-  hwpe_ctrl_intf_periph.slave                             target,
+  hwpe_ctrl_intf_periph.slave  target,
 
   // job triggeringm completion & status
-  output logic                                            job_trigger_o,
-  input  logic                                            job_done_i,
-  input  logic [31:0]                                     job_status_i,
+  output logic                 job_trigger_o,
+  input  logic                 job_done_i,
+  input  logic [31:0]          job_status_i,
 
   // job-independent registers
-  output hwpe_ctrl_target__hwpe_ctrl_generic__out_t       job_indep_regs_o,
+  output hwpe_ctrl_job_indep_t job_indep_regs_o,
 
   // job-dependent registers
-  output logic                                            job_dep_regs_valid_o,
-  output hwpe_ctrl_target__hwpe_ctrl_job_dependent__out_t job_dep_regs_o,
+  output logic                 job_dep_regs_valid_o,
+  output hwpe_ctrl_job_dep_t   job_dep_regs_o,
 
   // OBI interface to target SystemRDL-generated register interface
-  output logic                                            target_obi_req_o,
-  input  logic                                            target_obi_gnt_i,
-  output logic [4:0]                                      target_obi_addr_o,
-  output logic                                            target_obi_we_o,
-  output logic [3:0]                                      target_obi_be_o,
-  output logic [31:0]                                     target_obi_wdata_o,
-  output logic [ID_WIDTH-1:0]                             target_obi_aid_o,
-  input  logic                                            target_obi_rvalid_i,
-  output logic                                            target_obi_rready_o,
-  input  logic [31:0]                                     target_obi_rdata_i,
-  input  logic                                            target_obi_err_i,
-  input  logic [ID_WIDTH-1:0]                             target_obi_rid_i,
+  output logic                 target_obi_req_o,
+  input  logic                 target_obi_gnt_i,
+  output logic [4:0]           target_obi_addr_o,
+  output logic                 target_obi_we_o,
+  output logic [3:0]           target_obi_be_o,
+  output logic [31:0]          target_obi_wdata_o,
+  output logic [ID_WIDTH-1:0]  target_obi_aid_o,
+  input  logic                 target_obi_rvalid_i,
+  output logic                 target_obi_rready_o,
+  input  logic [31:0]          target_obi_rdata_i,
+  input  logic                 target_obi_err_i,
+  input  logic [ID_WIDTH-1:0]  target_obi_rid_i,
 
   // wrap -> register interface signals
-  input  hwpe_ctrl_regif_in_t                             hwif_in,
+  input  hwpe_ctrl_regif_in_t  hwif_in,
 
   // register interface -> wrap signals
-  output hwpe_ctrl_regif_out_t                            hwif_out
+  output hwpe_ctrl_regif_out_t hwif_out
 );
 
   // unroll periph interconnect signals into OBI
