@@ -132,7 +132,7 @@ module hwpe_ctrl_target
     end
     else if(soft_clear_regfile_en) begin
       soft_clear_regfile_q[0] <= soft_clear_regfile_d;
-      for(int i=1; i<NB_CLEAR_CYCLES) begin
+      for(int i=1; i<NB_CLEAR_CYCLES; i++) begin
         soft_clear_regfile_q[i] <= soft_clear_regfile_q[i-1];
       end
     end
@@ -144,7 +144,7 @@ module hwpe_ctrl_target
     end
     else if(soft_clear_state_en) begin
       soft_clear_state_q[0] <= soft_clear_state_d;
-      for(int i=1; i<NB_CLEAR_CYCLES) begin
+      for(int i=1; i<NB_CLEAR_CYCLES; i++) begin
         soft_clear_state_q[i] <= soft_clear_state_q[i-1];
       end
     end
