@@ -33,6 +33,7 @@ module hwpe_ctrl_target
 #(
   parameter int unsigned NB_CONTEXT      = 2,
   parameter int unsigned NB_CLEAR_CYCLES = 3,
+  parameter int unsigned ID_WIDTH        = 2,
   parameter type hwpe_ctrl_regif_in_t  = logic, // must be overridden!
   parameter type hwpe_ctrl_regif_out_t = logic, // must be overridden!
   parameter type hwpe_ctrl_job_indep_t = logic, // must be overridden!
