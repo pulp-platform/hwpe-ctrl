@@ -1,5 +1,5 @@
 /*
- * hwpe_ctrl.rdl
+ * hwpe_ctrl_regif.rdl
  * Francesco Conti <f.conti@unibo.it>
  *
  * Copyright (C) 2025 ETH Zurich, University of Bologna
@@ -18,7 +18,7 @@
   * (not to be changed) and sample job-independent and job-dependent registers.
   */
 
-addrmap hwpe_ctrl_target {
+addrmap hwpe_ctrl_regif {
     name = "HWPE Control port";
     desc = "";
 
@@ -99,7 +99,7 @@ addrmap hwpe_ctrl_target {
     };
 
     // "mandatory" set of HWPE registers (CONTROL regs). Not to be updated inside HWPEs.
-    regfile hwpe_ctrl_target_intf {
+    regfile hwpe_ctrl_mandatory {
         hwpe_commit_trigger commit_trigger @ 0x00;
         hwpe_acquire        acquire        @ 0x04;
         hwpe_reserved       reserved0      @ 0x08;
@@ -111,18 +111,18 @@ addrmap hwpe_ctrl_target {
     };
 
     // "generic" set of HWPE registers. Update inside HWPEs.
-    regfile hwpe_ctrl_generic {
+    regfile hwpe_ctrl_job_indep {
         hwpe_reserved rr;
     };
 
     // "job-dependent" set of HWPE registers. Update inside HWPEs.
-    regfile hwpe_ctrl_job_dependent {
+    regfile hwpe_ctrl_job_dep {
         hwpe_reserved rr;
     };
 
     // HWPE control address map. Update inside HWPEs
-    hwpe_ctrl_target_intf   hwpe_ctrl    @ 0x00;
-    hwpe_ctrl_generic       hwpe_generic @ 0x20;
-    hwpe_ctrl_job_dependent hwpe_job_dep @ 0x40;
+    hwpe_ctrl_mandatory hwpe_ctrl    @ 0x00;
+    hwpe_ctrl_job_indep hwpe_generic @ 0x20;
+    hwpe_ctrl_job_dep   hwpe_job_dep @ 0x40;
 
 };

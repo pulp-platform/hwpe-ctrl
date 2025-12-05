@@ -1,5 +1,5 @@
 /*
- * hwpe_ctrl_target_wrap.sv
+ * hwpe_ctrl_target.sv
  * Francesco Conti <f.conti@unibo.it>
  *
  * Copyright (C) 2014-2025 ETH Zurich, University of Bologna
@@ -17,19 +17,24 @@
   * This module exposes a hwpe_ctrl_intf_periph target (slave) port like the
   * deprecated `hwpe_ctrl_slave`. However, it differs from the previous module
   * in that it exploits SystemRDL to generate a register file interface.
-  * This module instantiates `hwpe_ctrl_target`, which is generated out of 
+  * This module must be coupled with a register interface generated out of 
   * a SystemRDL description. This repository contains a reference SystemRDL
-  * `hwpe_ctrl_target.rdl`. HWPEs must internalize this and modify the content to
+  * `hwpe_ctrl_regif.rdl` and a `rdl.sh` script to generate the register
+  * interface with PeakRDL. HWPEs must internalize this and modify the content to
   * align with their required set of job-independent and job-dependent registers,
   * without modifying the mandatory registers.
+  * Then, the `hwpe_ctrl_target` can be integrated by 1) overriding the parametric
+  * types `hwpe_ctrl_regif_in_t` and `hwpe_ctrl_regif_out_t`; 2) plugging the 
+  * OBI interface signals; 3) plugging `hwif_in` and `hwif_out`.
   */
 
-module hwpe_ctrl_target_wrap
+module hwpe_ctrl_target
   import hwpe_ctrl_package::*;
-  import hwpe_ctrl_target_pkg::*;
 #(
   parameter int unsigned NB_CONTEXT      = 2,
-  parameter int unsigned NB_CLEAR_CYCLES = 3
+  parameter int unsigned NB_CLEAR_CYCLES = 3,
+  parameter type hwpe_ctrl_regif_in_t  = logic, // must be overridden!
+  parameter type hwpe_ctrl_regif_out_t = logic  // must be overridden!
 )
 (
   input  logic                                            clk_i,
@@ -49,44 +54,45 @@ module hwpe_ctrl_target_wrap
 
   // job-dependent registers
   output logic                                            job_dep_regs_valid_o,
-  output hwpe_ctrl_target__hwpe_ctrl_job_dependent__out_t job_dep_regs_o
+  output hwpe_ctrl_target__hwpe_ctrl_job_dependent__out_t job_dep_regs_o,
+
+  // OBI interface to target SystemRDL-generated register interface
+  output logic                                            target_obi_req_o,
+  input  logic                                            target_obi_gnt_i,
+  output logic [4:0]                                      target_obi_addr_o,
+  output logic                                            target_obi_we_o,
+  output logic [3:0]                                      target_obi_be_o,
+  output logic [31:0]                                     target_obi_wdata_o,
+  output logic [ID_WIDTH-1:0]                             target_obi_aid_o,
+  input  logic                                            target_obi_rvalid_i,
+  output logic                                            target_obi_rready_o,
+  input  logic [31:0]                                     target_obi_rdata_i,
+  input  logic                                            target_obi_err_i,
+  input  logic [ID_WIDTH-1:0]                             target_obi_rid_i,
+
+  // wrap -> register interface signals
+  input  hwpe_ctrl_regif_in_t                             hwif_in,
+
+  // register interface -> wrap signals
+  output hwpe_ctrl_regif_out_t                            hwif_out
 );
 
   // unroll periph interconnect signals into OBI
-  logic                target_obi_req;
-  logic                target_obi_gnt;
-  logic [4:0]          target_obi_addr;
-  logic                target_obi_we;
-  logic [3:0]          target_obi_be;
-  logic [31:0]         target_obi_wdata;
-  logic [ID_WIDTH-1:0] target_obi_aid;
-  logic                target_obi_rvalid;
-  logic                target_obi_rready;
-  logic [31:0]         target_obi_rdata;
-  logic                target_obi_err;
-  logic [ID_WIDTH-1:0] target_obi_rid;
-  
-  assign target_obi_req    =  target.req;
-  assign target.gnt        =  target_obi_gnt;
-  assign target_obi_addr   =  target.add;
-  assign target_obi_we     = ~target.wen;
-  assign target_obi_be     =  target.be;
-  assign target_obi_wdata  =  target.data;
-  assign target_obi_aid    =  target.id;
-  assign target.r_data     =  target_obi_rdata;
-  assign target.r_valid    =  target_obi_rvalid;
-  assign target.r_id       =  target_obi_rid;
-  assign target_obi_rready =  '1;
+  assign target_obi_req_o    =  target.req;
+  assign target.gnt          =  target_obi_gnt_i;
+  assign target_obi_addr_o   =  target.add;
+  assign target_obi_we_o     = ~target.wen;
+  assign target_obi_be_o     =  target.be;
+  assign target_obi_wdata_o  =  target.data;
+  assign target_obi_aid_o    =  target.id;
+  assign target.r_data       =  target_obi_rdata_i;
+  assign target.r_valid      =  target_obi_rvalid_i;
+  assign target.r_id         =  target_obi_rid_i;
+  assign target_obi_rready_o =  '1;
 
   // error codes for job offload
   localparam logic [31:0] HWPE_CTRL_JOB_QUEUE_FULL_ERR_CODE = 32'hffff_ffff;
   localparam logic [31:0] HWPE_CTRL_JOB_ACQUIRED_ERR_CODE   = 32'hffff_fffe;
-
-  // wrap -> register interface signals
-  hwpe_ctrl_target__in_t hwif_in;
-
-  // register interface -> wrap signals
-  hwpe_ctrl_target__out_t hwif_out;
 
   // state of job offload procedure
   typedef enum logic { IDLE, ACQUIRE } job_offload_state_t;
@@ -186,28 +192,6 @@ module hwpe_ctrl_target_wrap
   // return the current job ID
   assign hwif_in.hwpe_ctrl.running_job.running_job.next = job_id_q;
 
-  // SystemRDL registers generated with PeakRDL (HWPE-specific)
-  hwpe_ctrl_target #(
-    .ID_WIDTH ( ID_WIDTH )
-  ) (
-    .clk          ( clk_i             ),
-    .arst_n       ( rst_ni            ),
-    .s_obi_req    ( target_obi_req    ),
-    .s_obi_gnt    ( target_obi_gnt    ),
-    .s_obi_addr   ( target_obi_addr   ),
-    .s_obi_we     ( target_obi_we     ),
-    .s_obi_be     ( target_obi_be     ),
-    .s_obi_wdata  ( target_obi_wdata  ),
-    .s_obi_aid    ( target_obi_aid    ),
-    .s_obi_rvalid ( target_obi_rvalid ),
-    .s_obi_rready ( target_obi_rready ),
-    .s_obi_rdata  ( target_obi_rdata  ),
-    .s_obi_err    ( target_obi_err    ),
-    .s_obi_rid    ( target_obi_rid    ),
-    .hwif_in      ( hwif_in           ),
-    .hwif_out     ( hwif_out          )
-  );
-
   // queue for incoming jobs
   fifo_v3 #(
     .FALL_THROUGH ( 0                                                ),
@@ -228,4 +212,4 @@ module hwpe_ctrl_target_wrap
   );
   assign job_dep_regs_valid_o = ~job_fifo_empty;
 
-endmodule // hwpe_ctrl_target_wrap
+endmodule // hwpe_ctrl_target
