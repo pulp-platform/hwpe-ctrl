@@ -197,9 +197,9 @@ module hwpe_ctrl_target
 
   // queue for incoming jobs
   fifo_v3 #(
-    .FALL_THROUGH ( 0                                                ),
-    .DEPTH        ( NB_CONTEXT                                       ),
-    .dtype        ( hwpe_ctrl_target__hwpe_ctrl_job_dependent__out_t )
+    .FALL_THROUGH ( 0                   ),
+    .DEPTH        ( NB_CONTEXT          ),
+    .dtype        ( hwpe_ctrl_job_dep_t )
   ) i_job_fifo (
     .clk_i      ( clk_i                 ),
     .rst_ni     ( rst_ni                ),
