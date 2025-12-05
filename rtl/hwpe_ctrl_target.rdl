@@ -1,0 +1,128 @@
+/*
+ * hwpe_ctrl.rdl
+ * Francesco Conti <f.conti@unibo.it>
+ *
+ * Copyright (C) 2025 ETH Zurich, University of Bologna
+ * Copyright and related rights are licensed under the Solderpad Hardware
+ * License, Version 0.51 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://solderpad.org/licenses/SHL-0.51. Unless required by applicable law
+ * or agreed to in writing, software, hardware and materials distributed under
+ * this License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+ * CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+
+ /*
+  * This file contains a sample address map for a HWPE with mandatory registers
+  * (not to be changed) and sample job-independent and job-dependent registers.
+  */
+
+addrmap hwpe_ctrl_target {
+    name = "HWPE Control port";
+    desc = "";
+
+    // Mandatory COMMIT_TRIGGER register. Not to be updated inside HWPEs.
+    reg hwpe_commit_trigger {
+        field {
+            name = "reserved";
+            desc = "Reserved.";
+            hw = r;
+            sw = r;
+        } r0[31:2] = 0;
+        field {
+            name = "commit_trigger";
+            desc = "Write 0 to commit job & start execution, unlock controller; write `0x1` value to commit job & unlock controller without starting execution, which will be started when the next job is committed and triggered; write `0x2` value to trigger the current job queue without committing any new job.";
+            hw = r;
+            sw = w;
+            swacc = true;
+        } commit_trigger[1:0] = 0;
+    };
+    // Mandatory ACQUIRE register. Not to be updated inside HWPEs.
+    reg hwpe_acquire {
+        field {
+            name = "acquire";
+            desc = "On read starts a job offload, locks controller. Returns job ID.";
+            hw = w;
+            sw = r;
+            swacc = true;
+        } acquire[31:0] = 0;
+    };
+    // Mandatory RESERVED register. Not to be updated inside HWPEs.
+    reg hwpe_reserved {
+        field {
+            name = "reserved";
+            desc = "Reserved.";
+            hw = r;
+            sw = r;
+        } reserved[31:0] = 0;
+    };
+    // Mandatory STATUS register. Not to be updated inside HWPEs.
+    reg hwpe_status {
+        field {
+            name = "status";
+            desc = "Status of currently running job.";
+            hw = w;
+            sw = r;
+        } status0[31:0] = 0;
+    };
+    // Mandatory RUNNING_JOB register. Not to be updated inside HWPEs.
+    reg hwpe_running_job {
+        field {
+            name = "reserved";
+            desc = "Reserved.";
+            hw = r;
+            sw = r;
+        } r0[31:8] = 0;
+        field {
+            name = "running_job";
+            desc = "Returns ID of currently running job if any job is running; otherwise, of the last job that has been run.";
+            hw = w;
+            sw = r;
+        } running_job[7:0] = 0;
+    };
+    // Mandatory SOFT_CLEAR register. Not to be updated inside HWPEs.
+    reg hwpe_soft_clear {
+        field {
+            name = "reserved";
+            desc = "Reserved.";
+            hw = r;
+            sw = r;
+        } r0[31:2] = 0;
+        field {
+            name = "soft_clear";
+            desc = "Write `0x0` to clear the full status of the accelerator IP, including the register file; write `0x1` to clear the status of the accelerator IP, except for the register file; write `0x2` to clear only the register file.";
+            hw = r;
+            sw = w;
+            swacc = true;
+        } soft_clear[1:0] = 0;
+    };
+
+    // "mandatory" set of HWPE registers (CONTROL regs). Not to be updated inside HWPEs.
+    regfile hwpe_ctrl_target_intf {
+        hwpe_commit_trigger commit_trigger @ 0x00;
+        hwpe_acquire        acquire        @ 0x04;
+        hwpe_reserved       reserved0      @ 0x08;
+        hwpe_status         status         @ 0x0c;
+        hwpe_running_job    running_job    @ 0x10;
+        hwpe_soft_clear     soft_clear     @ 0x14;
+        hwpe_reserved       reserved1      @ 0x18;
+        hwpe_reserved       reserved2      @ 0x1c;
+    };
+
+    // "generic" set of HWPE registers. Update inside HWPEs.
+    regfile hwpe_ctrl_generic {
+        hwpe_reserved rr;
+    };
+
+    // "job-dependent" set of HWPE registers. Update inside HWPEs.
+    regfile hwpe_ctrl_job_dependent {
+        hwpe_reserved rr;
+    };
+
+    // HWPE control address map. Update inside HWPEs
+    hwpe_ctrl_target_intf   hwpe_ctrl    @ 0x00;
+    hwpe_ctrl_generic       hwpe_generic @ 0x20;
+    hwpe_ctrl_job_dependent hwpe_job_dep @ 0x40;
+
+};

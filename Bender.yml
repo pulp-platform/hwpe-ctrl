@@ -17,13 +17,13 @@ sources:
       - rtl/hwpe_ctrl_package.sv
       - rtl/hwpe_ctrl_interfaces.sv
       # Level 1
-      - rtl/hwpe_ctrl_regfile_ff.sv
-      - rtl/hwpe_ctrl_regfile_latch.sv
+      - rtl/deprecated/hwpe_ctrl_regfile_ff.sv
+      - rtl/deprecated/hwpe_ctrl_regfile_latch.sv
       - rtl/hwpe_ctrl_seq_mult.sv
       - rtl/hwpe_ctrl_uloop.sv
       # Level 2
-      - rtl/hwpe_ctrl_regfile_latch_test_wrap.sv
+      - rtl/deprecated/hwpe_ctrl_regfile_latch_test_wrap.sv
       # Level 3
-      - rtl/hwpe_ctrl_regfile.sv
+      - rtl/deprecated/hwpe_ctrl_regfile.sv
       # Level 4
-      - rtl/hwpe_ctrl_slave.sv
+      - rtl/deprecated/hwpe_ctrl_slave.sv
