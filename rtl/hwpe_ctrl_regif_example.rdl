@@ -1,5 +1,5 @@
 /*
- * hwpe_ctrl_regif.rdl
+ * hwpe_ctrl_regif_example.rdl
  * Francesco Conti <f.conti@unibo.it>
  *
  * Copyright (C) 2025 ETH Zurich, University of Bologna
@@ -18,7 +18,7 @@
   * (not to be changed) and sample job-independent and job-dependent registers.
   */
 
-addrmap hwpe_ctrl_regif {
+addrmap hwpe_ctrl_regif_example {
     name = "HWPE Control port";
     desc = "";
 
