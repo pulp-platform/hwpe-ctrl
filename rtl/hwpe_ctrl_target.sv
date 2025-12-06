@@ -47,7 +47,7 @@ module hwpe_ctrl_target
   // peripheral interconnect side
   hwpe_ctrl_intf_periph.slave  target,
 
-  // job triggeringm completion & status
+  // job triggering completion & status
   output logic                 job_trigger_o,
   input  logic                 job_done_i,
   input  logic [31:0]          job_status_i,
@@ -62,7 +62,7 @@ module hwpe_ctrl_target
   // OBI interface to target SystemRDL-generated register interface
   output logic                 target_obi_req_o,
   input  logic                 target_obi_gnt_i,
-  output logic [4:0]           target_obi_addr_o,
+  output logic [31:0]          target_obi_addr_o,
   output logic                 target_obi_we_o,
   output logic [3:0]           target_obi_be_o,
   output logic [31:0]          target_obi_wdata_o,
