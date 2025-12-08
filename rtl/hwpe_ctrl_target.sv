@@ -74,10 +74,10 @@ module hwpe_ctrl_target
   input  logic [ID_WIDTH-1:0]  target_obi_rid_i,
 
   // wrap -> register interface signals
-  input  hwpe_ctrl_regif_in_t  hwif_in,
+  output hwpe_ctrl_regif_in_t  hwif_in,
 
   // register interface -> wrap signals
-  output hwpe_ctrl_regif_out_t hwif_out
+  input  hwpe_ctrl_regif_out_t hwif_out
 );
 
   // unroll periph interconnect signals into OBI
