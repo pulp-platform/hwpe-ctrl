@@ -34,6 +34,7 @@ module hwpe_ctrl_target
   parameter int unsigned NB_CONTEXT      = 2,
   parameter int unsigned NB_CLEAR_CYCLES = 3,
   parameter int unsigned ID_WIDTH        = 2,
+  parameter int unsigned ADDR_WIDTH      = 16,
   parameter type hwpe_ctrl_regif_in_t  = logic, // must be overridden!
   parameter type hwpe_ctrl_regif_out_t = logic, // must be overridden!
   parameter type hwpe_ctrl_job_indep_t = logic, // must be overridden!
@@ -83,7 +84,7 @@ module hwpe_ctrl_target
   // unroll periph interconnect signals into OBI
   assign target_obi_req_o    =  target.req;
   assign target.gnt          =  target_obi_gnt_i;
-  assign target_obi_addr_o   =  target.add;
+  assign target_obi_addr_o   = {{(32-ADDR_WIDTH){1'b0}} , target.add[ADDR_WIDTH-1:0]};
   assign target_obi_we_o     = ~target.wen;
   assign target_obi_be_o     =  target.be;
   assign target_obi_wdata_o  =  target.data;
@@ -122,7 +123,7 @@ module hwpe_ctrl_target
 
   // generate clear enables
   assign soft_clear_regfile_en = soft_clear_regfile_d | (|soft_clear_regfile_q);
-  assign soft_clear_state_eb   = soft_clear_state_d   | (|soft_clear_state_q);
+  assign soft_clear_state_en   = soft_clear_state_d   | (|soft_clear_state_q);
 
   // activate clear for NB_CLEAR_CYCLES cycles in case of a SOFT_CLEAR write
   always_ff @(posedge clk_i or negedge rst_ni)
@@ -165,6 +166,19 @@ module hwpe_ctrl_target
   assign hwif_in.hwpe_ctrl.acquire.acquire.next = job_offload_state_q == ACQUIRE ? HWPE_CTRL_JOB_ACQUIRED_ERR_CODE   :
                                                   job_fifo_full                  ? HWPE_CTRL_JOB_QUEUE_FULL_ERR_CODE :
                                                                                    { 24'h0 , job_id_d };
+  always_ff @(posedge clk_i or negedge rst_ni)
+  begin
+    if(~rst_ni) begin
+      job_id_q <= '1;
+    end
+    else if(|soft_clear_regfile_q) begin
+      job_id_q <= '1;
+    end
+    else if(job_done_i) begin
+      job_id_q <= job_id_d;
+    end
+  end
+  assign job_id_d = job_id_q + 1;
 
   // enable state change on ACQUIRE / COMMIT_TRIGGER register access
   logic job_offload_state_en;
