@@ -19,7 +19,7 @@
   * in that it exploits SystemRDL to generate a register file interface.
   * This module must be coupled with a register interface generated out of 
   * a SystemRDL description. This repository contains a reference SystemRDL
-  * `hwpe_ctrl_regif.rdl` and a `rdl.sh` script to generate the register
+  * `hwpe_ctrl_regif_example.rdl` and a `rdl.sh` script to generate the register
   * interface with PeakRDL. HWPEs must internalize this and modify the content to
   * align with their required set of job-independent and job-dependent registers,
   * without modifying the mandatory registers.
