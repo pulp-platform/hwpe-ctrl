@@ -229,4 +229,7 @@ module hwpe_ctrl_target
   );
   assign job_dep_regs_valid_o = ~job_fifo_empty;
 
+  // job-independent registers
+  assign job_indep_regs_o = hwif_out.hwpe_job_indep;
+
 endmodule // hwpe_ctrl_target
