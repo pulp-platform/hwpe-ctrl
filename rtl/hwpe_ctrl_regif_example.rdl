@@ -20,7 +20,7 @@
 
 addrmap hwpe_ctrl_regif_example {
     name = "HWPE Control port";
-    desc = "";
+    desc = "Control register map for the HWPE, including mandatory control/status registers and example job-independent and job-dependent configuration registers.";
 
     // Mandatory COMMIT_TRIGGER register. Not to be updated inside HWPEs.
     reg hwpe_commit_trigger {
