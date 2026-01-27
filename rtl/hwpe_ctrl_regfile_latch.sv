@@ -166,7 +166,7 @@ module hwpe_ctrl_regfile_latch
              for(l=0; l<NUM_BYTE; l++)
                begin : w_ByteIter
                   if( ClocksxC[k][l] == 1'b1)
-                    MemContentxDP[k][l] = WDataIntxD[l];
+                    MemContentxDP[k][l] <= WDataIntxD[l];
                end
           end
      end
