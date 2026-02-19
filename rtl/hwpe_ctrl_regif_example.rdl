@@ -23,7 +23,7 @@ addrmap hwpe_ctrl_regif_example {
     desc = "Control register map for the HWPE, including mandatory control/status registers and example job-independent and job-dependent configuration registers.";
 
     // Mandatory COMMIT_TRIGGER register. Not to be updated inside HWPEs.
-    reg hwpe_commit_trigger {
+    reg commit_trigger {
         field {
             name = "reserved";
             desc = "Reserved.";
@@ -39,7 +39,7 @@ addrmap hwpe_ctrl_regif_example {
         } commit_trigger[1:0] = 0;
     };
     // Mandatory ACQUIRE register. Not to be updated inside HWPEs.
-    reg hwpe_acquire {
+    reg acquire {
         field {
             name = "acquire";
             desc = "On read starts a job offload, locks controller. Returns job ID.";
@@ -49,7 +49,7 @@ addrmap hwpe_ctrl_regif_example {
         } acquire[31:0] = 0;
     };
     // Mandatory RESERVED register. Not to be updated inside HWPEs.
-    reg hwpe_reserved {
+    reg reserved {
         field {
             name = "reserved";
             desc = "Reserved.";
@@ -58,7 +58,7 @@ addrmap hwpe_ctrl_regif_example {
         } reserved[31:0] = 0;
     };
     // Mandatory STATUS register. Not to be updated inside HWPEs.
-    reg hwpe_status {
+    reg status {
         field {
             name = "status";
             desc = "Status of currently running job.";
@@ -67,7 +67,7 @@ addrmap hwpe_ctrl_regif_example {
         } status0[31:0] = 0;
     };
     // Mandatory RUNNING_JOB register. Not to be updated inside HWPEs.
-    reg hwpe_running_job {
+    reg running_job {
         field {
             name = "reserved";
             desc = "Reserved.";
@@ -82,7 +82,7 @@ addrmap hwpe_ctrl_regif_example {
         } running_job[7:0] = 0;
     };
     // Mandatory SOFT_CLEAR register. Not to be updated inside HWPEs.
-    reg hwpe_soft_clear {
+    reg soft_clear {
         field {
             name = "reserved";
             desc = "Reserved.";
@@ -99,30 +99,30 @@ addrmap hwpe_ctrl_regif_example {
     };
 
     // "mandatory" set of HWPE registers (CONTROL regs). Not to be updated inside HWPEs.
-    regfile hwpe_ctrl_mandatory {
-        hwpe_commit_trigger commit_trigger @ 0x00;
-        hwpe_acquire        acquire        @ 0x04;
-        hwpe_reserved       reserved0      @ 0x08;
-        hwpe_status         status         @ 0x0c;
-        hwpe_running_job    running_job    @ 0x10;
-        hwpe_soft_clear     soft_clear     @ 0x14;
-        hwpe_reserved       reserved1      @ 0x18;
-        hwpe_reserved       reserved2      @ 0x1c;
+    regfile ctrl_mandatory {
+        commit_trigger commit_trigger @ 0x00;
+        acquire        acquire        @ 0x04;
+        reserved       reserved0      @ 0x08;
+        status         status         @ 0x0c;
+        running_job    running_job    @ 0x10;
+        soft_clear     soft_clear     @ 0x14;
+        reserved       reserved1      @ 0x18;
+        reserved       reserved2      @ 0x1c;
     };
 
     // "generic" set of HWPE registers. Update inside HWPEs.
-    regfile hwpe_ctrl_job_indep {
-        hwpe_reserved rr;
+    regfile ctrl_job_indep {
+        reserved rr;
     };
 
     // "job-dependent" set of HWPE registers. Update inside HWPEs.
-    regfile hwpe_ctrl_job_dep {
-        hwpe_reserved rr;
+    regfile ctrl_job_dep {
+        reserved rr;
     };
 
     // HWPE control address map. Update inside HWPEs
-    hwpe_ctrl_mandatory hwpe_ctrl    @ 0x00;
-    hwpe_ctrl_job_indep hwpe_generic @ 0x20;
-    hwpe_ctrl_job_dep   hwpe_job_dep @ 0x40;
+    ctrl_mandatory ctrl    @ 0x00;
+    ctrl_job_indep generic @ 0x20;
+    ctrl_job_dep   job_dep @ 0x40;
 
 };
