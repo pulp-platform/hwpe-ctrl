@@ -36,7 +36,7 @@ addrmap hwpe_ctrl_regif_example {
             hw = r;
             sw = w;
             swacc = true;
-        } commit_trigger[1:0] = 0;
+        } value[1:0] = 0;
     };
     // Mandatory ACQUIRE register. Not to be updated inside HWPEs.
     reg acquire {
@@ -46,7 +46,7 @@ addrmap hwpe_ctrl_regif_example {
             hw = w;
             sw = r;
             swacc = true;
-        } acquire[31:0] = 0;
+        } value[31:0] = 0;
     };
     // Mandatory RESERVED register. Not to be updated inside HWPEs.
     reg reserved {
@@ -55,7 +55,7 @@ addrmap hwpe_ctrl_regif_example {
             desc = "Reserved.";
             hw = r;
             sw = r;
-        } reserved[31:0] = 0;
+        } value[31:0] = 0;
     };
     // Mandatory STATUS register. Not to be updated inside HWPEs.
     reg status {
@@ -64,7 +64,7 @@ addrmap hwpe_ctrl_regif_example {
             desc = "Status of currently running job.";
             hw = w;
             sw = r;
-        } status0[31:0] = 0;
+        } value[31:0] = 0;
     };
     // Mandatory RUNNING_JOB register. Not to be updated inside HWPEs.
     reg running_job {
@@ -79,7 +79,7 @@ addrmap hwpe_ctrl_regif_example {
             desc = "Returns ID of currently running job if any job is running; otherwise, of the last job that has been run.";
             hw = w;
             sw = r;
-        } running_job[7:0] = 0;
+        } value[7:0] = 0;
     };
     // Mandatory SOFT_CLEAR register. Not to be updated inside HWPEs.
     reg soft_clear {
@@ -95,7 +95,7 @@ addrmap hwpe_ctrl_regif_example {
             hw = r;
             sw = w;
             swacc = true;
-        } soft_clear[1:0] = 0;
+        } value[1:0] = 0;
     };
 
     // "mandatory" set of HWPE registers (CONTROL regs). Not to be updated inside HWPEs.
