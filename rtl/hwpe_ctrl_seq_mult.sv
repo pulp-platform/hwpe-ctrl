@@ -11,9 +11,37 @@
  * this License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
+ */
+
+/**
+ * The **hwpe_ctrl_seq_mult** module is a utility module that implements a
+ * fully sequential unsigned multiplier of two operands `a_i` (of width *AW*)
+ * and `b_i` (of width *BW*). It is typically used to compute derivative
+ * parameters used by the microcode processor **hwpe_ctrl_uloop** (e.g.
+ * a stride value obtained as the product of two job-independent registers)
+ * without dedicating a fast combinational multiplier to that purpose.
  *
- * A fully sequential unsigned multiplier. Inputs must
- * be kept stable for AW-1 cycles after the start strobe.
+ * Operation is started by asserting the `start_i` strobe for one cycle.
+ * The operands `a_i` and `b_i` must be kept stable for *AW-1* cycles after
+ * `start_i`; the product appears on `prod_o` and `valid_o` is asserted
+ * high for one cycle when the product has been computed. The `ready_o`
+ * output is high when the multiplier is idle and ready to accept a new
+ * operation. When `invert_i` is asserted, an extra cycle is taken to
+ * two's-complement-negate the result (i.e. the product is `-(a_i*b_i)`
+ * rather than `a_i*b_i`).
+ *
+ * .. tabularcolumns:: |l|l|J|
+ * .. _hwpe_ctrl_seq_mult_params:
+ * .. table:: **hwpe_ctrl_seq_mult** design-time parameters.
+ *
+ *   +----------+-------------+-------------------------------------------------------+
+ *   | **Name** | **Default** | **Description**                                       |
+ *   +----------+-------------+-------------------------------------------------------+
+ *   | *AW*     | 8           | Width of operand `a_i` and number of iteration cycles.|
+ *   +----------+-------------+-------------------------------------------------------+
+ *   | *BW*     | 8           | Width of operand `b_i`. The product has width *AW+BW*.|
+ *   +----------+-------------+-------------------------------------------------------+
+ *
  */
 
 

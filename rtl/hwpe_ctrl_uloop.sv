@@ -12,11 +12,134 @@
  * this License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
+ */
+
+/**
+ * The **hwpe_ctrl_uloop** (micro-loop processor) module
+ * implements a very simple microcode processor that can be used to execute
+ * the main computation block of an HWPE multiple times according to a set
+ * of nested loops, while updating a handful of architectural state
+ * registers between iterations. These registers are typically used to
+ * generate base offsets that are forwarded to the HWPE address generators
+ * to walk through tensors larger than what is described in a single job.
  *
- * This module implements a very simple microcode processor that can be used to
- * compute updated base indeces for the streamers.
- * It can directly operate on NB_REG registers and read NB_RO_REG other
- * ones.
+ * The microcode processor implements *NB_LOOPS* nested loops (default 6).
+ * The innermost loop is loop 0, then loop 1, and so on. The number of
+ * iterations of each loop is configured at runtime through the
+ * `ctrl_i.range` field of `uloop_code_i`. After every iteration of any
+ * loop, the processor executes the sequence of operations associated
+ * to that loop (its *body*), then starts/continues the next inner loop;
+ * once the innermost loop completes, control returns to the next outer
+ * loop. When the outermost loop has executed its last iteration the
+ * `flags_o.done` signal is asserted.
+ *
+ * The architectural state is a register file with two sections:
+ *
+ * * *NB_REG* R/W registers (default 4) of width *REG_WIDTH* (default 32 bit).
+ *   These can be both the destination *RA* and the source *RB* of a uloop
+ *   instruction. Their value is exposed to the outside on `flags_o.offs`
+ *   and is typically used as a base offset to feed the HWPE address
+ *   generators.
+ * * *NB_RO_REG* read-only registers (default 12, max 32) provided
+ *   externally via `registers_read_i`. These can only be used as the *RB*
+ *   source operand and are typically programmed once per job (e.g. through
+ *   job-independent registers) to encode tensor strides, sizes, etc.
+ *
+ * The microcode supports two instructions:
+ *
+ * * **add** (`op_sel=1`): performs ``RA := RA + RB`` (RA is one of the
+ *   R/W registers, RB is any register).
+ * * **mv** (`op_sel=0`): performs ``RA := RB``.
+ *
+ * Each bytecode word (`uloop_bytecode_t`) is 11 bits wide and packs together
+ * `op_sel` (1 bit), `a` (5 bits, selects RA) and `b` (5 bits, selects RB).
+ * All operation words of all loop bodies are concatenated into a single
+ * code array of up to *LENGTH* entries (default 32). A separate
+ * `uloop_loops_t` per-loop header (9 bits: 5 bits `uloop_addr` + 4 bits
+ * `nb_ops`) tells the processor where each loop body starts in the code
+ * array and how many operations it contains.
+ *
+ * The microcode is normally specified at a high level as a YAML file (see
+ * `uloop-example/code.yml` in the *hwpe-ctrl* repository) and compiled
+ * into the two bit fields (code + loops) by the `uloop_compile.py`
+ * Python helper. The resulting bit fields are typically either hardwired
+ * inside an HWPE wrapper or programmed at runtime through job-independent
+ * registers.
+ *
+ * Example YAML body (excerpt from `uloop-example/code.yml`)::
+ *
+ *     loop_stream_inner: # innermost: for jj in range(0, nif/TP)
+ *       - { op: add, a: W,       b: TPin }
+ *       - { op: add, a: x,       b: TPin }
+ *     loop_filter_x:     # for k in range(0, fs)
+ *       - { op: add, a: W,       b: TPin }
+ *       - { op: add, a: x,       b: TPin }
+ *     loop_filter_y:     # for l in range(0, fs)
+ *       - { op: add, a: W,       b: TPin }
+ *       - { op: add, a: x,       b: x_iter }
+ *     loop_stream_outer: # for ii in range(0, nof/TP)
+ *       - { op: add, a: W,       b: TPin }
+ *       - { op: add, a: y,       b: TPout }
+ *       - { op: mv,  a: x,       b: x_major }
+ *
+ * Here ``W``, ``x``, ``y``, ``x_major`` are mnemonics for R/W registers
+ * (RA-eligible) while ``TPin``, ``TPout``, ``x_iter`` are mnemonics for
+ * R/O registers programmed once per job; the compiler converts the
+ * mnemonics into the right 5-bit indices and emits a single hex bit field
+ * for the whole code array and a second one for the per-loop headers.
+ *
+ * When *SHADOWED* is 1, the uloop is double-buffered: a shadow register
+ * latches the freshly-computed `flags_o` and exposes it externally as soon
+ * as the consumer (e.g. the controller FSM) asserts `ctrl_i.enable`, so
+ * that one set of indices/offsets can be consumed while the next is being
+ * computed.
+ *
+ * .. tabularcolumns:: |l|l|J|
+ * .. _hwpe_ctrl_uloop_params:
+ * .. table:: **hwpe_ctrl_uloop** design-time parameters.
+ *
+ *   +-----------------+----------------------------------+-------------------------------------------------------------------------+
+ *   | **Name**        | **Default**                      | **Description**                                                         |
+ *   +-----------------+----------------------------------+-------------------------------------------------------------------------+
+ *   | *LENGTH*        | `ULOOP_MAX_LENGTH` (32)          | Maximum total number of bytecode operations across all loops.           |
+ *   +-----------------+----------------------------------+-------------------------------------------------------------------------+
+ *   | *NB_LOOPS*      | `ULOOP_MAX_NB_LOOPS` (6)         | Number of nested loops implemented.                                     |
+ *   +-----------------+----------------------------------+-------------------------------------------------------------------------+
+ *   | *NB_REG*        | `ULOOP_MAX_NB_REG` (9)           | Number of R/W (RA-eligible) registers in the internal register file.   |
+ *   +-----------------+----------------------------------+-------------------------------------------------------------------------+
+ *   | *NB_RO_REG*     | `ULOOP_MAX_NB_RO_REG` (32)       | Number of R/O (RB-only) registers driven externally.                    |
+ *   +-----------------+----------------------------------+-------------------------------------------------------------------------+
+ *   | *REG_WIDTH*     | `ULOOP_MAX_REG_WIDTH` (32)       | Width in bits of each register and computed offset.                     |
+ *   +-----------------+----------------------------------+-------------------------------------------------------------------------+
+ *   | *CNT_WIDTH*     | `ULOOP_MAX_CNT_WIDTH` (12)       | Width in bits of each loop iteration counter.                           |
+ *   +-----------------+----------------------------------+-------------------------------------------------------------------------+
+ *   | *SHADOWED*      | `ULOOP_DEFAULT_SHADOWED` (1)     | If 1, double-buffer outputs through a shadow register.                  |
+ *   +-----------------+----------------------------------+-------------------------------------------------------------------------+
+ *   | *DEBUG_DISPLAY* | 0                                | If 1, print simulation traces of microcode execution.                   |
+ *   +-----------------+----------------------------------+-------------------------------------------------------------------------+
+ *
+ * .. tabularcolumns:: |l|l|J|
+ * .. _hwpe_ctrl_uloop_flags:
+ * .. table:: **hwpe_ctrl_uloop** output flags (`flags_o`).
+ *
+ *   +---------------+----------------------------------------+-------------------------------------------------------------------+
+ *   | **Name**      | **Type**                               | **Description**                                                   |
+ *   +---------------+----------------------------------------+-------------------------------------------------------------------+
+ *   | *done*        | `logic`                                | 1 when the outermost loop has completed all its iterations.       |
+ *   +---------------+----------------------------------------+-------------------------------------------------------------------+
+ *   | *valid*       | `logic`                                | 1 when `offs` / `idx` hold a freshly-computed set of values.      |
+ *   +---------------+----------------------------------------+-------------------------------------------------------------------+
+ *   | *ready*       | `logic`                                | 1 when the uloop can accept a new `ctrl_i.enable` pulse.          |
+ *   +---------------+----------------------------------------+-------------------------------------------------------------------+
+ *   | *offs*        | `logic [NB_REG-1:0][REG_WIDTH-1:0]`    | Current value of each R/W register (typical streamer offsets).    |
+ *   +---------------+----------------------------------------+-------------------------------------------------------------------+
+ *   | *idx*         | `logic [NB_LOOPS-1:0][CNT_WIDTH-1:0]`  | Current iteration counter of each loop.                           |
+ *   +---------------+----------------------------------------+-------------------------------------------------------------------+
+ *   | *idx_update*  | `logic [NB_LOOPS-1:0]`                 | 1 for each loop whose iteration index just changed.               |
+ *   +---------------+----------------------------------------+-------------------------------------------------------------------+
+ *   | *loop*        | `logic [$clog2(NB_LOOPS)-1:0]`         | Index of the loop whose body was executed last.                   |
+ *   +---------------+----------------------------------------+-------------------------------------------------------------------+
+ *
  */
 
 
