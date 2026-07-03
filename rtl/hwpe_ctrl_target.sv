@@ -73,7 +73,7 @@
  *   | *ACQUIRE*          | Read to acquire a new job ID. Returns ``0xffff_ffff`` if the job queue is full, or             |
  *   |                    | ``0xffff_fffe`` if a job is already being acquired but has not been committed yet.             |
  *   +--------------------+------------------------------------------------------------------------------------------------+
- *   | *COMMIT_TRIGGER*   | Writing 0 to bit 0 commits the currently acquired job to the queue; writing 0 to bit 1         |
+ *   | *COMMIT_TRIGGER*   | Writing 0 to bit 1 commits the currently acquired job to the queue; writing 0 to bit 0         |
  *   |                    | triggers execution of the next job in the queue (asserts `job_trigger_o`).                     |
  *   +--------------------+------------------------------------------------------------------------------------------------+
  *   | *SOFT_CLEAR*       | Writing 0 to bit 0 clears the register file; writing 0 to bit 1 clears the engine state       |
@@ -160,8 +160,11 @@ module hwpe_ctrl_target
   typedef enum logic { IDLE, ACQUIRE } job_offload_state_t;
   job_offload_state_t job_offload_state_d, job_offload_state_q;
 
-  // current and next job ID
-  logic [7:0] job_id_d, job_id_q;
+  // current and next acquired job ID
+  logic [7:0] job_acquired_id_d, job_acquired_id_q;
+
+  // current and next running job ID
+  logic [7:0] job_running_id_d, job_running_id_q;
 
   // job commit signal
   logic job_commit;
@@ -213,9 +216,9 @@ module hwpe_ctrl_target
   assign clear_o = |soft_clear_state_q;
 
   // COMMIT_TRIGGER register:
-  // Commit a job in the job queue if COMMIT_TRIGGER[0] is 1'b0. Trigger the job queue execution if COMMIT_TRIGGER[1] is 1'b0.
-  assign job_commit    = hwif_out.hwpe_ctrl.commit_trigger.commit_trigger.swacc & ~hwif_out.hwpe_ctrl.commit_trigger.commit_trigger.value[0];
-  assign job_trigger_o = hwif_out.hwpe_ctrl.commit_trigger.commit_trigger.swacc & ~hwif_out.hwpe_ctrl.commit_trigger.commit_trigger.value[1];
+  // Commit a job in the job queue if COMMIT_TRIGGER[1] is 1'b0. Trigger the job queue execution if COMMIT_TRIGGER[0] is 1'b0.
+  assign job_commit    = hwif_out.hwpe_ctrl.commit_trigger.commit_trigger.swacc & ~hwif_out.hwpe_ctrl.commit_trigger.commit_trigger.value[1];
+  assign job_trigger_o = hwif_out.hwpe_ctrl.commit_trigger.commit_trigger.swacc & ~hwif_out.hwpe_ctrl.commit_trigger.commit_trigger.value[0];
 
   // ACQUIRE register:
   // 1. if in ACQUIRE state, respond to any new reads with error code (-2)
@@ -223,20 +226,35 @@ module hwpe_ctrl_target
   // 3. else, return the next job ID
   assign hwif_in.hwpe_ctrl.acquire.acquire.next = job_offload_state_q == ACQUIRE ? HWPE_CTRL_JOB_ACQUIRED_ERR_CODE   :
                                                   job_fifo_full                  ? HWPE_CTRL_JOB_QUEUE_FULL_ERR_CODE :
-                                                                                   { 24'h0 , job_id_d };
+                                                                                   { 24'h0 , job_acquired_id_q };
+
   always_ff @(posedge clk_i or negedge rst_ni)
   begin
     if(~rst_ni) begin
-      job_id_q <= '1;
+      job_acquired_id_q <= '0;
     end
     else if(|soft_clear_regfile_q) begin
-      job_id_q <= '1;
+      job_acquired_id_q <= '0;
     end
-    else if(job_done_i) begin
-      job_id_q <= job_id_d;
+    else if((job_offload_state_q == IDLE) & hwif_out.hwpe_ctrl.acquire.acquire.swacc) begin
+      job_acquired_id_q <= job_acquired_id_d;
     end
   end
-  assign job_id_d = job_id_q + 1;
+  assign job_acquired_id_d = job_acquired_id_q + 1;
+
+  always_ff @(posedge clk_i or negedge rst_ni)
+  begin
+    if(~rst_ni) begin
+      job_running_id_q <= '0;
+    end
+    else if(|soft_clear_regfile_q) begin
+      job_running_id_q <= '0;
+    end
+    else if(job_done_i) begin
+      job_running_id_q <= job_running_id_d;
+    end
+  end
+  assign job_running_id_d = job_running_id_q + 1;
 
   // enable state change on ACQUIRE / COMMIT_TRIGGER register access
   logic job_offload_state_en;
@@ -265,7 +283,7 @@ module hwpe_ctrl_target
 
   // RUNNING_JOB register:
   // return the current job ID
-  assign hwif_in.hwpe_ctrl.running_job.running_job.next = job_id_q;
+  assign hwif_in.hwpe_ctrl.running_job.running_job.next = job_running_id_q;
 
   // queue for incoming jobs
   fifo_v3 #(
