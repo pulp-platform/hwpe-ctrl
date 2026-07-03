@@ -236,7 +236,7 @@ module hwpe_ctrl_target
     else if(|soft_clear_regfile_q) begin
       job_acquired_id_q <= '0;
     end
-    else if((job_offload_state_q == IDLE) & hwif_out.hwpe_ctrl.acquire.acquire.swacc) begin
+    else if((job_offload_state_q == IDLE) & ~job_fifo_full & hwif_out.hwpe_ctrl.acquire.acquire.swacc) begin
       job_acquired_id_q <= job_acquired_id_d;
     end
   end
