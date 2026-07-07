@@ -18,9 +18,11 @@ timeprecision 1ps;
 
 module tb_hwpe_ctrl_partial_mult;
 
+  localparam VERBOSE = 1;
   localparam AW = 32;
   localparam BW = 32;
   localparam MULT_BITS = 4;
+  localparam NUM_TRANSACTIONS = 10000;
 
   logic clk_i = '0;
   logic rst_ni = '1;
@@ -31,6 +33,7 @@ module tb_hwpe_ctrl_partial_mult;
   logic valid;
   logic ready;
   logic start;
+  logic invert;
 
   // ATI timing parameters.
   localparam TCP = 1.0ns; // clock period, 1GHz clock
@@ -53,15 +56,17 @@ module tb_hwpe_ctrl_partial_mult;
     for (int i = 0; i < 10; i++)
       cycle();
     rst_ni <= #TA 1'b1;
-    while (1) begin;
+    for (int t = 0; t < NUM_TRANSACTIONS; t++) begin
       a <= #TA $random();
       b <= #TA $random();
+      invert <= #TA $urandom_range(0,1);
       start <= #TA 1'b1;
       cycle();
       start <= #TA 1'b0;
-      for(int i=0; i<AW/MULT_BITS + (AW % MULT_BITS) ? 1 : 0; i++)
+      for(int i=0; i<(AW/MULT_BITS + (AW % MULT_BITS ? 1 : 0)); i++)
         cycle();
     end
+    $finish;
   end
 
   hwpe_ctrl_partial_mult #(
@@ -75,13 +80,19 @@ module tb_hwpe_ctrl_partial_mult;
     .start_i ( start  ),
     .a_i     ( a      ),
     .b_i     ( b      ),
-    .invert_i ( 1'b0 ),
+    .invert_i ( invert ),
     .valid_o ( valid  ),
     .ready_o ( ready  ),
     .prod_o  ( prod   )
   );
 
-  assert property (@(posedge clk_i) (valid & ~start & rst_ni) |-> (prod == a*b))
+  always_ff @(posedge clk_i) begin
+    if(valid & ~start & rst_ni & VERBOSE)
+      $display("prod %016x = %08x * %08x\n", prod, a, b);
+  end
+
+  assert property (@(posedge clk_i) (valid & ~start & rst_ni) |->
+    (prod == (invert ? -((AW+BW)'(a) * b) : (AW+BW)'(a) * b)))
     else $fatal("Wrong multiplication data produced!!!");
 
 endmodule // tb_hwpe_ctrl_seq_mult
