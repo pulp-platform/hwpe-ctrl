@@ -12,8 +12,10 @@
  * CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  *
- * A partially sequential unsigned multiplier. Inputs must
- * be kept stable for AW/MULT_BITS-1 cycles after the start strobe.
+ * A partially sequential unsigned multiplier. Inputs (including
+ * invert_i) must be kept stable for AW/MULT_BITS-1 cycles after the
+ * start strobe. When invert_i is asserted, the product is
+ * -(a_i*b_i) rather than a_i*b_i.
  */
 
 
