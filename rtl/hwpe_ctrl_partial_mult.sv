@@ -78,8 +78,7 @@ module hwpe_ctrl_partial_mult
   assign ready_o = ready_q;
 
   // pad a_i to a multiple of MULT_BITS
-  assign a_pad = {{(AW_PAD-AW){a_i[AW-1]}}, a_i};
-
+  assign a_pad = {{(AW_PAD-AW){1'b0}}, a_i};
   assign chunk = (a_pad >> cnt*MULT_BITS) & {{(AW_PAD-MULT_BITS){1'b0}}, {MULT_BITS{1'b1}}};
   assign prod = chunk * b_i;
   assign prod_nopad = prod[AW+BW-1:0];
