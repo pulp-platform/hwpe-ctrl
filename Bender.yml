@@ -24,6 +24,7 @@ sources:
       - rtl/deprecated/hwpe_ctrl_regfile_ff.sv
       - rtl/deprecated/hwpe_ctrl_regfile_latch.sv
       - rtl/hwpe_ctrl_seq_mult.sv
+      - rtl/hwpe_ctrl_partial_mult.sv
       - rtl/hwpe_ctrl_uloop.sv
       - rtl/hwpe_ctrl_target.sv
       # Level 2
