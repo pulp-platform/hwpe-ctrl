@@ -95,4 +95,4 @@ module tb_hwpe_ctrl_partial_mult;
     (prod == (invert ? -((AW+BW)'(a) * b) : (AW+BW)'(a) * b)))
     else $fatal("Wrong multiplication data produced!!!");
 
-endmodule // tb_hwpe_ctrl_seq_mult
+endmodule // tb_hwpe_ctrl_partial_mult
