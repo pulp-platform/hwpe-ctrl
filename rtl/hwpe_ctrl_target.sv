@@ -93,6 +93,7 @@ module hwpe_ctrl_target
   parameter int unsigned NB_CLEAR_CYCLES = 3,
   parameter int unsigned ID_WIDTH        = 2,
   parameter int unsigned ADDR_WIDTH      = 16,
+  parameter int unsigned AUTOTRIGGER_WAIT_CYCLES = 3,
   parameter type hwpe_ctrl_regif_in_t  = logic, // must be overridden!
   parameter type hwpe_ctrl_regif_out_t = logic, // must be overridden!
   parameter type hwpe_ctrl_job_indep_t = logic, // must be overridden!
@@ -204,8 +205,10 @@ module hwpe_ctrl_target
   // current and next running job ID
   logic [7:0] job_running_id_d, job_running_id_q;
 
-  // delayed job done
+  // delayed job done (job_done_i delayed by AUTOTRIGGER_WAIT_CYCLES cycles;
+  // AUTOTRIGGER_WAIT_CYCLES=1 reproduces the original single-register delay)
   logic job_done_q;
+  logic [AUTOTRIGGER_WAIT_CYCLES-1:0] job_done_sr_q;
 
   // job commit signal
   logic job_commit;
@@ -218,19 +221,23 @@ module hwpe_ctrl_target
   logic [NB_CLEAR_CYCLES-1:0] soft_clear_regfile_q, soft_clear_state_q;
   logic                       soft_clear_regfile_en, soft_clear_state_en;
 
-  // Registered job_done
+  // Registered job_done, delayed by AUTOTRIGGER_WAIT_CYCLES cycles
   always_ff @(posedge clk_i or negedge rst_ni)
   begin
     if(~rst_ni) begin
-      job_done_q <= '0;
+      job_done_sr_q <= '0;
     end
     else if(|soft_clear_regfile_q) begin
-      job_done_q <= '0;
+      job_done_sr_q <= '0;
     end
     else begin
-      job_done_q <= job_done_i;
+      job_done_sr_q[0] <= job_done_i;
+      for(int i=1; i<AUTOTRIGGER_WAIT_CYCLES; i++) begin
+        job_done_sr_q[i] <= job_done_sr_q[i-1];
+      end
     end
   end
+  assign job_done_q = job_done_sr_q[AUTOTRIGGER_WAIT_CYCLES-1];
 
   // Registered software-access strobes for the write-command registers.
   // PeakRDL exposes `.value` from the registered field storage (updated one cycle after a
