@@ -310,8 +310,7 @@ module hwpe_ctrl_target
   // COMMIT_TRIGGER register:
   // Commit a job in the job queue if COMMIT_TRIGGER[1] is 1'b0. Trigger the job queue execution if COMMIT_TRIGGER[0] is 1'b0.
 assign job_commit    =  commit_trigger_swacc_q & ~hwif_out.hwpe_ctrl.commit_trigger.commit_trigger.value[1];
-assign job_trigger_o = (commit_trigger_swacc_q & ~hwif_out.hwpe_ctrl.commit_trigger.commit_trigger.value[0] & ~job_running_q &
-                        (job_commit | ~job_fifo_empty)) | // trigger when a TRIGGER arrives, no job is running, and there is (or will be) a job to run
+assign job_trigger_o = (commit_trigger_swacc_q & ~hwif_out.hwpe_ctrl.commit_trigger.commit_trigger.value[0] & ~job_running_q & (job_commit | ~job_fifo_empty)) | // trigger when a TRIGGER arrives, no job is running, and there is (or will be) a job to run
                        (~hwif_out.hwpe_ctrl.autotrigger.autotrigger_n.value & job_done_q & ~job_fifo_empty); // trigger with autotrigger if active and there are pending jobs
 
   // ACQUIRE register:
