@@ -204,6 +204,9 @@ module hwpe_ctrl_target
   // current and next running job ID
   logic [7:0] job_running_id_d, job_running_id_q;
 
+  // delayed job done
+  logic job_done_q;
+
   // job commit signal
   logic job_commit;
 
@@ -214,6 +217,20 @@ module hwpe_ctrl_target
   logic                       soft_clear_regfile_d, soft_clear_state_d;
   logic [NB_CLEAR_CYCLES-1:0] soft_clear_regfile_q, soft_clear_state_q;
   logic                       soft_clear_regfile_en, soft_clear_state_en;
+
+  // Registered job_done
+  always_ff @(posedge clk_i or negedge rst_ni)
+  begin
+    if(~rst_ni) begin
+      job_done_q <= '0;
+    end
+    else if(|soft_clear_regfile_q) begin
+      job_done_q <= '0;
+    end
+    else begin
+      job_done_q <= job_done_i;
+    end
+  end
 
   // Registered software-access strobes for the write-command registers.
   // PeakRDL exposes `.value` from the registered field storage (updated one cycle after a
@@ -271,8 +288,9 @@ module hwpe_ctrl_target
 
   // COMMIT_TRIGGER register:
   // Commit a job in the job queue if COMMIT_TRIGGER[1] is 1'b0. Trigger the job queue execution if COMMIT_TRIGGER[0] is 1'b0.
-  assign job_commit    = commit_trigger_swacc_q & ~hwif_out.hwpe_ctrl.commit_trigger.commit_trigger.value[1];
-  assign job_trigger_o = commit_trigger_swacc_q & ~hwif_out.hwpe_ctrl.commit_trigger.commit_trigger.value[0];
+  assign job_commit    =  commit_trigger_swacc_q & ~hwif_out.hwpe_ctrl.commit_trigger.commit_trigger.value[1];
+  assign job_trigger_o = (commit_trigger_swacc_q & ~hwif_out.hwpe_ctrl.commit_trigger.commit_trigger.value[0]) | // trigger when a TRIGGER arrives
+                         (~hwif_out.hwpe_ctrl.autotrigger.autotrigger_n.value & job_done_q & ~job_fifo_empty); // trigger with autotrigger if active and there are pending jobs
 
   // ACQUIRE register:
   // 1. if in ACQUIRE state, respond to any new reads with error code (-2)

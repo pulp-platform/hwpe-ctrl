@@ -48,14 +48,20 @@ addrmap hwpe_ctrl_regif_example {
             swacc = true;
         } value[31:0] = 0;
     };
-    // Mandatory RESERVED register. Not to be updated inside HWPEs.
-    reg reserved {
+    // Mandatory AUTOTRIGGER register. Not to be updated inside HWPEs.
+    reg autotrigger {
         field {
             name = "reserved";
             desc = "Reserved.";
             hw = r;
             sw = r;
-        } value[31:0] = 0;
+        } r0[31:1] = 0;
+        field {
+            name = "autotrigger_n";
+            desc = "If 0 (default) trigger automatically the next job when the current is finished. If 1, wait for an explicit trigger.";
+            hw = r;
+            sw = rw;
+        } autotrigger_n[0:0] = 0;
     };
     // Mandatory STATUS register. Not to be updated inside HWPEs.
     reg status {
@@ -97,12 +103,21 @@ addrmap hwpe_ctrl_regif_example {
             swacc = true;
         } value[1:0] = 0;
     };
+    // Mandatory RESERVED register. Not to be updated inside HWPEs.
+    reg reserved {
+        field {
+            name = "reserved";
+            desc = "Reserved.";
+            hw = r;
+            sw = r;
+        } value[31:0] = 0;
+    };
 
     // "mandatory" set of HWPE registers (CONTROL regs). Not to be updated inside HWPEs.
     regfile ctrl_mandatory {
         commit_trigger commit_trigger @ 0x00;
         acquire        acquire        @ 0x04;
-        reserved       reserved0      @ 0x08;
+        autotrigger    autotrigger    @ 0x08;
         status         status         @ 0x0c;
         running_job    running_job    @ 0x10;
         soft_clear     soft_clear     @ 0x14;
