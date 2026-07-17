@@ -205,6 +205,9 @@ module hwpe_ctrl_target
   // current and next running job ID
   logic [7:0] job_running_id_d, job_running_id_q;
 
+  // job running flag: set (0->1) when job_trigger_o fires, cleared (1->0) by job_done_early_q
+  logic job_running_q;
+
   // delayed job done (job_done_i delayed by AUTOTRIGGER_WAIT_CYCLES cycles;
   // AUTOTRIGGER_WAIT_CYCLES=1 reproduces the original single-register delay)
   logic job_done_q;
@@ -238,6 +241,17 @@ module hwpe_ctrl_target
     end
   end
   assign job_done_q = job_done_sr_q[AUTOTRIGGER_WAIT_CYCLES-1];
+
+  // job_done_i delayed by AUTOTRIGGER_WAIT_CYCLES-1 cycles
+  logic job_done_early_q;
+  generate
+    if (AUTOTRIGGER_WAIT_CYCLES > 1) begin : gen_job_done_early_geq2_gen
+      assign job_done_early_q = job_done_sr_q[AUTOTRIGGER_WAIT_CYCLES-2];
+    end
+    else begin : gen_job_done_early_eq1_gen
+      assign job_done_early_q = job_done_i;
+    end
+  endgenerate
 
   // Registered software-access strobes for the write-command registers.
   // PeakRDL exposes `.value` from the registered field storage (updated one cycle after a
@@ -296,7 +310,7 @@ module hwpe_ctrl_target
   // COMMIT_TRIGGER register:
   // Commit a job in the job queue if COMMIT_TRIGGER[1] is 1'b0. Trigger the job queue execution if COMMIT_TRIGGER[0] is 1'b0.
   assign job_commit    =  commit_trigger_swacc_q & ~hwif_out.hwpe_ctrl.commit_trigger.commit_trigger.value[1];
-  assign job_trigger_o = (commit_trigger_swacc_q & ~hwif_out.hwpe_ctrl.commit_trigger.commit_trigger.value[0]) | // trigger when a TRIGGER arrives
+  assign job_trigger_o = (commit_trigger_swacc_q & ~hwif_out.hwpe_ctrl.commit_trigger.commit_trigger.value[0] & ~job_running_q) | // trigger when a TRIGGER arrives and no job is running
                          (~hwif_out.hwpe_ctrl.autotrigger.autotrigger_n.value & job_done_q & ~job_fifo_empty); // trigger with autotrigger if active and there are pending jobs
 
   // ACQUIRE register:
@@ -334,6 +348,22 @@ module hwpe_ctrl_target
     end
   end
   assign job_running_id_d = job_running_id_q + 1;
+
+  always_ff @(posedge clk_i or negedge rst_ni)
+  begin
+    if(~rst_ni) begin
+      job_running_q <= 1'b0;
+    end
+    else if(|soft_clear_regfile_q) begin
+      job_running_q <= 1'b0;
+    end
+    else if(job_trigger_o) begin
+      job_running_q <= 1'b1;
+    end
+    else if(job_done_early_q) begin
+      job_running_q <= 1'b0;
+    end
+  end
 
   // enable state change on ACQUIRE / COMMIT_TRIGGER register access
   logic job_offload_state_en;
