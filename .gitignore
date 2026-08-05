@@ -6,7 +6,7 @@ vendor/
 rtl/rdl-example/
 
 # Verilator simulation artifacts
-target/sim/verilator/obj_dir/
+target/sim/verilator/obj_dir*/
 target/sim/verilator/compile.verilator.tcl
 target/sim/verilator/transcript_*
 target/sim/verilator/*.vcd

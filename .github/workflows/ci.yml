@@ -62,7 +62,7 @@ jobs:
 
     - name: Build verilator model
       run: |
-        make hw-build target=verilator NbContext=${{ matrix.nb_context }} VerilatorJobs=4
+        make hw-build-all target=verilator NbContext=${{ matrix.nb_context }} VerilatorJobs=4
 
     - name: Run Tests
       run: |

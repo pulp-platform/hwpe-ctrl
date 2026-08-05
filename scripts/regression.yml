@@ -40,15 +40,15 @@ hwpe_ctrl_target_regression:
   soft_clear:
     path: .
     command: make hw-run target=$Target Module=hwpe_ctrl_target_tb TEST=soft_clear | tee target/sim/$Target/transcript_soft_clear && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_soft_clear
-  # uloop:
-  #   path: .
-  #   command: make hw-run target=$Target Module=hwpe_ctrl_uloop_tb TEST=uloop | tee target/sim/$Target/transcript_uloop && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_uloop
-  # partial_mult:
-  #   path: .
-  #   command: make hw-run target=$Target Module=hwpe_ctrl_partial_mult_tb TEST=partial_mult | tee target/sim/$Target/transcript_partial_mult && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_partial_mult
-  # seq_mult:
-  #   path: .
-  #   command: make hw-run target=$Target Module=hwpe_ctrl_seq_mult_tb TEST=seq_mult | tee target/sim/$Target/transcript_seq_mult && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_seq_mult
-  # seq_mult_invert:
-  #   path: .
-  #   command: make hw-run target=$Target Module=hwpe_ctrl_seq_mult_tb TEST=seq_mult_invert | tee target/sim/$Target/transcript_seq_mult_invert && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_seq_mult_invert
+  uloop:
+    path: .
+    command: make hw-run target=$Target Module=hwpe_ctrl_uloop_tb TEST=uloop | tee target/sim/$Target/transcript_uloop && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_uloop
+  partial_mult:
+    path: .
+    command: make hw-run target=$Target Module=hwpe_ctrl_partial_mult_tb TEST=partial_mult | tee target/sim/$Target/transcript_partial_mult && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_partial_mult
+  seq_mult:
+    path: .
+    command: make hw-run target=$Target Module=hwpe_ctrl_seq_mult_tb TEST=seq_mult | tee target/sim/$Target/transcript_seq_mult && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_seq_mult
+  seq_mult_invert:
+    path: .
+    command: make hw-run target=$Target Module=hwpe_ctrl_seq_mult_tb TEST=seq_mult_invert | tee target/sim/$Target/transcript_seq_mult_invert && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_seq_mult_invert
