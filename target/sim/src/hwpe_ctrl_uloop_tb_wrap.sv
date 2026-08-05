@@ -1,3 +1,7 @@
+// Copyright 2019 ETH Zurich and University of Bologna.
+// Solderpad Hardware License, Version 0.51, see LICENSE for details.
+// SPDX-License-Identifier: SHL-0.51
+
 /*
  * hwpe_ctrl_uloop_tb_wrap.sv
  * Francesco Conti <f.conti@unibo.it>

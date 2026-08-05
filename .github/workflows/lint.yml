@@ -30,12 +30,23 @@ jobs:
         #    differently worded, pre-existing header ("See LICENSE.sw.txt
         #    for details", no SPDX-License-Identifier line) and is not part
         #    of this WP's file set to rewrite.
+        # Waived non-RTL build/manifest files, which carry no header today:
+        #  - Bender.yml and src_files.yml are dependency manifests;
+        #  - rtl/rdl.sh and sim/* are the legacy QuestaSim helper scripts
+        #    (the current Verilator flow lives under target/sim, which is
+        #    NOT waived and is checked normally).
+        # Patterns are fnmatch'd against the repo-relative path, so `sim/*`
+        # matches only the top-level sim/ tree, not target/sim/.
         exclude_paths: |
           *.md
           LICENSE*
           uloop-example/*
           rtl/rdl-example/*
           *.rdl
+          Bender.yml
+          src_files.yml
+          rtl/rdl.sh
+          sim/*
 
   lint-sv:
     runs-on: ubuntu-latest
