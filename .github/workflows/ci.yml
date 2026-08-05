@@ -45,7 +45,7 @@ jobs:
 
     - name: Install PeakRDL
       run: |
-        uv tool install peakrdl --with peakrdl-regblock --with peakrdl-html --with peakrdl-cheader
+        uv tool install peakrdl-cli --with peakrdl-regblock --with peakrdl-html --with peakrdl-cheader
 
     - name: Install bender
       run: |
