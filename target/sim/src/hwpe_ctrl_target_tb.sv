@@ -34,9 +34,9 @@ module hwpe_ctrl_target_tb
   import hwpe_ctrl_package::*;
   import hwpe_ctrl_regif_example_pkg::*;
 #(
-  parameter        TCP        = 1.0ns, // clock period, 1 GHz clock
-  parameter        TA         = 0.2ns, // application time
-  parameter        TT         = 0.8ns, // test time
+  parameter time   TCP        = 1.0ns, // clock period, 1 GHz clock
+  parameter time   TA         = 0.2ns, // application time
+  parameter time   TT         = 0.8ns, // test time
   parameter int unsigned NB_CONTEXT      = 2,
   parameter int unsigned NB_CLEAR_CYCLES = 3
 )

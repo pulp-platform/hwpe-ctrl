@@ -38,9 +38,9 @@
 module hwpe_ctrl_uloop_tb
   import hwpe_ctrl_package::*;
 #(
-  parameter TCP = 1.0ns, // clock period, 1 GHz clock
-  parameter TA  = 0.2ns, // application time
-  parameter TT  = 0.8ns  // test time
+  parameter time TCP = 1.0ns, // clock period, 1 GHz clock
+  parameter time TA  = 0.2ns, // application time
+  parameter time TT  = 0.8ns  // test time
 )
 (
   input logic clk_i,

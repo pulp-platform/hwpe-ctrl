@@ -44,9 +44,9 @@
 module hwpe_ctrl_partial_mult_tb
   import hwpe_ctrl_package::*;
 #(
-  parameter               TCP              = 1.0ns, // clock period, 1 GHz clock
-  parameter               TA               = 0.2ns, // application time
-  parameter               TT               = 0.8ns, // test time
+  parameter time          TCP              = 1.0ns, // clock period, 1 GHz clock
+  parameter time          TA               = 0.2ns, // application time
+  parameter time          TT               = 0.8ns, // test time
   parameter int unsigned  AW               = 32,
   parameter int unsigned  BW               = 32,
   parameter int unsigned  MULT_BITS        = 4,
@@ -115,7 +115,7 @@ module hwpe_ctrl_partial_mult_tb
    * Result checker (replaces the legacy concurrent assertion)           *
    * ------------------------------------------------------------------ */
 
-  always_ff @(posedge clk_i) begin
+  always @(posedge clk_i) begin
     if (valid & ~start & rst_ni) begin
       automatic logic [AW+BW-1:0] exp_prod;
       exp_prod = invert ? -((AW+BW)'(a) * b) : (AW+BW)'(a) * b;

@@ -30,9 +30,9 @@ timeprecision 1ps;
 module hwpe_ctrl_partial_mult_tb_wrap;
 
   // ATI timing parameters.
-  localparam TCP = 1.0ns; // clock period, 1 GHz clock
-  localparam TA  = 0.2ns; // application time
-  localparam TT  = 0.8ns; // test time
+  localparam time TCP = 1.0ns; // clock period, 1 GHz clock
+  localparam time TA  = 0.2ns; // application time
+  localparam time TT  = 0.8ns; // test time
 
   logic clk_i;
   logic rst_ni;
@@ -47,7 +47,7 @@ module hwpe_ctrl_partial_mult_tb_wrap;
   );
 
   // Performs one entire clock cycle.
-  task cycle;
+  task automatic cycle;
     clk_i <= #(TCP/2) 1'b0;
     clk_i <= #TCP 1'b1;
     #TCP;
