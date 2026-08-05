@@ -3,11 +3,13 @@
 # SPDX-License-Identifier: SHL-0.51
 #
 # Regression test matrix for hwpe-ctrl, run via scripts/bwruntests.py (see
-# scripts/ci-regression.sh). The verilator model is built once per CI matrix
-# leg (.github/workflows/ci.yml runs `make hw-build` before this file is
-# used), so every entry below only runs `make hw-run TEST=<name>` -- no
-# rebuild -- against that already-built model, and checks the transcript for
-# the "[TB] - Success!" marker the testbench prints on pass (it prints
+# scripts/ci-regression.sh). The verilator models are built once per CI
+# matrix leg (.github/workflows/ci.yml runs `make hw-build-all` before this
+# file is used, which builds every top in
+# target/sim/verilator/verilator.mk's MODULES list), so every entry below
+# only runs `make hw-run Module=<top> TEST=<name>` -- no rebuild -- against
+# the already-built model for that top, and checks the transcript for the
+# "[TB] - Success!" marker the testbench prints on pass (it prints
 # "[TB] - Fail!" and calls $error on failure, either way followed by
 # $finish).
 #
@@ -20,17 +22,33 @@
 # arbiter bwruntests.py checks the exit code of, since it is the last
 # command in the `&&` chain. This mirrors RedMulE's scripts/regression.yml
 # idiom -- keep it, and keep grep after the pipe, not folded into it.
+#
+# Transcript filenames are unique per test (not just per Module) since
+# hw-run writes to $(VerilatorDir)/transcript_<TEST>, and two Modules could
+# in principle share a TEST name.
 
 hwpe_ctrl_target_regression:
   reg_access:
     path: .
-    command: make hw-run target=$Target TEST=reg_access | tee target/sim/$Target/transcript_reg_access && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_reg_access
+    command: make hw-run target=$Target Module=hwpe_ctrl_target_tb TEST=reg_access | tee target/sim/$Target/transcript_reg_access && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_reg_access
   offload:
     path: .
-    command: make hw-run target=$Target TEST=offload | tee target/sim/$Target/transcript_offload && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_offload
+    command: make hw-run target=$Target Module=hwpe_ctrl_target_tb TEST=offload | tee target/sim/$Target/transcript_offload && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_offload
   fifo_backpressure:
     path: .
-    command: make hw-run target=$Target TEST=fifo_backpressure | tee target/sim/$Target/transcript_fifo_backpressure && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_fifo_backpressure
+    command: make hw-run target=$Target Module=hwpe_ctrl_target_tb TEST=fifo_backpressure | tee target/sim/$Target/transcript_fifo_backpressure && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_fifo_backpressure
   soft_clear:
     path: .
-    command: make hw-run target=$Target TEST=soft_clear | tee target/sim/$Target/transcript_soft_clear && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_soft_clear
+    command: make hw-run target=$Target Module=hwpe_ctrl_target_tb TEST=soft_clear | tee target/sim/$Target/transcript_soft_clear && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_soft_clear
+  uloop:
+    path: .
+    command: make hw-run target=$Target Module=hwpe_ctrl_uloop_tb TEST=uloop | tee target/sim/$Target/transcript_uloop && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_uloop
+  partial_mult:
+    path: .
+    command: make hw-run target=$Target Module=hwpe_ctrl_partial_mult_tb TEST=partial_mult | tee target/sim/$Target/transcript_partial_mult && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_partial_mult
+  seq_mult:
+    path: .
+    command: make hw-run target=$Target Module=hwpe_ctrl_seq_mult_tb TEST=seq_mult | tee target/sim/$Target/transcript_seq_mult && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_seq_mult
+  seq_mult_invert:
+    path: .
+    command: make hw-run target=$Target Module=hwpe_ctrl_seq_mult_tb TEST=seq_mult_invert | tee target/sim/$Target/transcript_seq_mult_invert && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_seq_mult_invert

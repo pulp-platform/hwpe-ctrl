@@ -43,3 +43,9 @@ sources:
       - target/sim/src/hwpe_ctrl_target_wrap.sv
       - target/sim/src/hwpe_ctrl_target_tb.sv
       - target/sim/src/hwpe_ctrl_target_tb_wrap.sv
+      - target/sim/src/hwpe_ctrl_partial_mult_tb.sv
+      - target/sim/src/hwpe_ctrl_partial_mult_tb_wrap.sv
+      - target/sim/src/hwpe_ctrl_seq_mult_tb.sv
+      - target/sim/src/hwpe_ctrl_seq_mult_tb_wrap.sv
+      - target/sim/src/hwpe_ctrl_uloop_tb.sv
+      - target/sim/src/hwpe_ctrl_uloop_tb_wrap.sv
