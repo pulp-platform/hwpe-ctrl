@@ -33,3 +33,13 @@ sources:
       - rtl/deprecated/hwpe_ctrl_regfile.sv
       # Level 4
       - rtl/deprecated/hwpe_ctrl_slave.sv
+
+  - target: hwpe_ctrl_test
+    include_dirs:
+      - rtl/rdl-example
+    files:
+      - rtl/rdl-example/hwpe_ctrl_regif_example_pkg.sv
+      - rtl/rdl-example/hwpe_ctrl_regif_example.sv
+      - target/sim/src/hwpe_ctrl_target_wrap.sv
+      - target/sim/src/hwpe_ctrl_target_tb.sv
+      - target/sim/src/hwpe_ctrl_target_tb_wrap.sv

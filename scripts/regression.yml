@@ -1,0 +1,36 @@
+# Copyright 2025 ETH Zurich and University of Bologna.
+# Solderpad Hardware License, Version 0.51, see LICENSE for details.
+# SPDX-License-Identifier: SHL-0.51
+#
+# Regression test matrix for hwpe-ctrl, run via scripts/bwruntests.py (see
+# scripts/ci-regression.sh). The verilator model is built once per CI matrix
+# leg (.github/workflows/ci.yml runs `make hw-build` before this file is
+# used), so every entry below only runs `make hw-run TEST=<name>` -- no
+# rebuild -- against that already-built model, and checks the transcript for
+# the "[TB] - Success!" marker the testbench prints on pass (it prints
+# "[TB] - Fail!" and calls $error on failure, either way followed by
+# $finish).
+#
+# `make hw-run` on its own always exits 0 (it just runs the compiled
+# simulation binary to completion; a failing testbench does not make
+# Verilator itself return non-zero), so pass/fail cannot be read off the
+# `make hw-run` exit code directly. Piping through `tee` lets bwruntests.py
+# still show the live transcript while it is captured to a file; the
+# trailing `grep -q '\[TB\] - Success!' ...` is the actual pass/fail
+# arbiter bwruntests.py checks the exit code of, since it is the last
+# command in the `&&` chain. This mirrors RedMulE's scripts/regression.yml
+# idiom -- keep it, and keep grep after the pipe, not folded into it.
+
+hwpe_ctrl_target_regression:
+  reg_access:
+    path: .
+    command: make hw-run target=$Target TEST=reg_access | tee target/sim/$Target/transcript_reg_access && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_reg_access
+  offload:
+    path: .
+    command: make hw-run target=$Target TEST=offload | tee target/sim/$Target/transcript_offload && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_offload
+  fifo_backpressure:
+    path: .
+    command: make hw-run target=$Target TEST=fifo_backpressure | tee target/sim/$Target/transcript_fifo_backpressure && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_fifo_backpressure
+  soft_clear:
+    path: .
+    command: make hw-run target=$Target TEST=soft_clear | tee target/sim/$Target/transcript_soft_clear && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_soft_clear

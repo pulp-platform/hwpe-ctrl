@@ -1,0 +1,16 @@
+# Copyright 2025 ETH Zurich and University of Bologna.
+# Solderpad Hardware License, Version 0.51, see LICENSE for details.
+# SPDX-License-Identifier: SHL-0.51
+#
+# Single-test smoke check for the regression runner (scripts/bwruntests.py).
+# Useful for quickly validating the pipeline without paying for the full
+# scripts/regression.yml sweep. Requires a verilator model already built,
+# e.g.:
+#
+#     make hw-build target=verilator NbContext=2 VerilatorJobs=4
+#     Target=verilator REGR_FILE=scripts/regression-smoke.yml ./scripts/ci-regression.sh
+
+hwpe_ctrl_target_regression_smoke:
+  reg_access:
+    path: .
+    command: make hw-run target=$Target TEST=reg_access | tee target/sim/$Target/transcript_reg_access && grep -q '\[TB\] - Success!' target/sim/$Target/transcript_reg_access

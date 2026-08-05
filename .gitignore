@@ -1,0 +1,15 @@
+# Bender / vendored tooling
+.bender/
+vendor/
+
+# Generated register interface (rtl/rdl.sh output)
+rtl/rdl-example/
+
+# Verilator simulation artifacts
+target/sim/verilator/obj_dir/
+target/sim/verilator/compile.verilator.tcl
+target/sim/verilator/transcript_*
+target/sim/verilator/*.vcd
+
+# Python
+__pycache__/

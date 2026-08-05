@@ -1,0 +1,67 @@
+# Copyright 2025 ETH Zurich and University of Bologna.
+# Solderpad Hardware License, Version 0.51, see LICENSE for details.
+# SPDX-License-Identifier: SHL-0.51
+#
+name: lint
+
+on: [ push, pull_request, workflow_dispatch ]
+
+jobs:
+
+  lint-license:
+    runs-on: ubuntu-latest
+    steps:
+    -
+      name: Checkout
+      uses: actions/checkout@v3
+    -
+      name: Check license
+      uses: pulp-platform/pulp-actions/lint-license@v2
+      with:
+        license: |
+          Copyright (\d{4}(-\d{4})?\s)?.*
+          (Solderpad Hardware License, Version 0.51|Licensed under the Apache License, Version 2.0), see LICENSE for details.
+          SPDX-License-Identifier: (SHL-0.51|Apache-2.0)
+        # Exclude generated/vendored content that falls outside this
+        # three-line header convention:
+        #  - rtl/rdl-example is peakrdl-generated (make regif) and gitignored,
+        #    so it is normally absent from a fresh checkout anyway;
+        #  - uloop-example/ ships its own Apache-2.0 LICENSE.sw.txt with a
+        #    differently worded, pre-existing header ("See LICENSE.sw.txt
+        #    for details", no SPDX-License-Identifier line) and is not part
+        #    of this WP's file set to rewrite.
+        exclude_paths: |
+          *.md
+          LICENSE*
+          uloop-example/*
+          rtl/rdl-example/*
+          *.rdl
+
+  lint-sv:
+    runs-on: ubuntu-latest
+    steps:
+    -
+      name: Checkout
+      uses: actions/checkout@v3
+    -
+      name: Run Verible
+      uses: chipsalliance/verible-linter-action@main
+      with:
+        paths: rtl target/sim/src
+        # rtl/rdl-example is peakrdl-generated output (gitignored, produced
+        # by `make regif`); it will not pass style lint and is excluded the
+        # same way RedMulE excludes individual files here, via a path
+        # prefix matched against the discovered file list.
+        exclude_paths: |
+          rtl/rdl-example
+        extra_args: "--waiver_files .github/verible.waiver"
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        fail_on_error: true
+        reviewdog_reporter: github-check
+        log_file: verible-verilog-lint.log
+    -
+      name: Upload Verible Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: lint-sv-artifacts
+        path: verible-verilog-lint.log
